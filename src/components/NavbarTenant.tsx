@@ -4,11 +4,12 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useState, useEffect, useRef } from 'react'
 import { useLang } from '@/context/LanguageContext'
+import { useTenant } from '@/context/TenantContext'
 import { clearAuthData } from '@/lib/axios'
 import { Lang } from '@/lib/translations'
 import clsx from 'clsx'
 import { toast } from 'sonner'
-import { ChevronDown } from 'lucide-react'
+import { ChevronDown, Building2 } from 'lucide-react'
 import ProfileModal from '@/components/ProfileModal'
 import ChangePasswordModal from '@/components/ChangePasswordModal'
 import { AppVersionDisplay } from '@/components/AppVersionDisplay'
@@ -23,19 +24,29 @@ export default function NavbarTenant() {
   const router = useRouter()
   const { t, lang, setLang } = useLang()
   const { brandName, logoUrl } = useBrand()
+  const { allowedOrgs, selectedOrg, setSelectedOrg, loading: tenantLoading } = useTenant()
 
   const [loggingOut, setLoggingOut] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
+  const [tenantMenuOpen, setTenantMenuOpen] = useState(false)
   const [businessMenuOpen, setBusinessMenuOpen] = useState(false)
   const [mobileBusinessOpen, setMobileBusinessOpen] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [modal, setModal] = useState<'profile' | 'changePassword' | null>(null)
   const [username, setUsername] = useState('User')
 
+  const tenantRef = useRef<HTMLDivElement>(null)
   const userRef = useRef<HTMLDivElement>(null)
   const businessRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => { setUsername(localStorage.getItem('username') || 'User') }, [])
+
+  useEffect(() => {
+    if (!tenantMenuOpen) return
+    const handler = (e: MouseEvent) => { if (!tenantRef.current?.contains(e.target as Node)) setTenantMenuOpen(false) }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [tenantMenuOpen])
 
   useEffect(() => {
     if (!userMenuOpen) return
@@ -61,6 +72,9 @@ export default function NavbarTenant() {
   }
 
   const displayName = brandName || 'PLEASE ACCESS'
+  const selectedLabel = selectedOrg
+    ? (selectedOrg.orgCustomId || selectedOrg.orgId || selectedOrg.orgName || '—')
+    : t.nav.selectTenant
 
   return (
     <header className="bg-gradient-to-r from-primary-700 to-primary-600 shadow-lg z-30 relative">
@@ -77,6 +91,56 @@ export default function NavbarTenant() {
             <p className="text-primary-200 text-[10px] leading-tight">Access</p>
           </div>
         </Link>
+
+        <div className="hidden md:block w-px h-6 bg-white/20 flex-shrink-0" />
+
+        {/* Tenant selector */}
+        <div ref={tenantRef} className="relative flex-shrink-0">
+          <button
+            onClick={() => setTenantMenuOpen(v => !v)}
+            disabled={tenantLoading}
+            className="flex items-center gap-2 bg-white/15 hover:bg-white/25 border border-white/20 rounded-lg px-3 py-1.5 text-white text-sm font-semibold transition-colors disabled:opacity-60 min-w-[120px] max-w-[200px]"
+          >
+            <Building2 className="w-3.5 h-3.5 opacity-80 flex-shrink-0" />
+            <span className="truncate flex-1 text-left">{tenantLoading ? '...' : selectedLabel}</span>
+            <ChevronDown className={clsx('w-3.5 h-3.5 opacity-70 flex-shrink-0 transition-transform', tenantMenuOpen && 'rotate-180')} />
+          </button>
+
+          {tenantMenuOpen && (
+            <div className="absolute left-0 top-full mt-1.5 w-56 bg-white rounded-xl shadow-xl border border-gray-100 py-1 z-50 max-h-72 overflow-y-auto">
+              {allowedOrgs.length === 0 ? (
+                <p className="px-4 py-3 text-sm text-gray-400 text-center">{t.nav.noTenantAvailable}</p>
+              ) : (
+                allowedOrgs.map(org => {
+                  const orgKey = org.orgCustomId ?? org.orgId ?? ''
+                  const selectedKey = selectedOrg ? (selectedOrg.orgCustomId ?? selectedOrg.orgId ?? '') : ''
+                  const isSelected = orgKey === selectedKey
+                  return (
+                    <button
+                      key={orgKey}
+                      onClick={() => { setSelectedOrg(org); setTenantMenuOpen(false) }}
+                      className={clsx(
+                        'flex items-center gap-2.5 w-full px-4 py-2.5 text-sm text-left transition-colors',
+                        isSelected ? 'text-primary-700 font-semibold bg-primary-50' : 'text-gray-700 hover:bg-gray-50'
+                      )}
+                    >
+                      <Building2 className={clsx('w-3.5 h-3.5 flex-shrink-0', isSelected ? 'text-primary-600' : 'text-gray-400')} />
+                      <div className="min-w-0">
+                        <p className="font-semibold truncate">{org.orgCustomId || org.orgId}</p>
+                        {org.orgName && <p className="text-xs text-gray-400 truncate">{org.orgName}</p>}
+                      </div>
+                      {isSelected && (
+                        <svg className="w-4 h-4 text-primary-600 ml-auto flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                        </svg>
+                      )}
+                    </button>
+                  )
+                })
+              )}
+            </div>
+          )}
+        </div>
 
         <div className="hidden md:block w-px h-6 bg-white/20 flex-shrink-0" />
 
@@ -185,6 +249,32 @@ export default function NavbarTenant() {
 
       {mobileMenuOpen && (
         <nav className="md:hidden border-t border-white/10 px-3 pb-3 pt-2 flex flex-col gap-1">
+          {/* Tenant selector mobile */}
+          <div className="px-3 py-2">
+            <p className="text-xs font-semibold text-white/50 uppercase tracking-widest mb-2">{t.nav.selectTenant}</p>
+            <div className="flex flex-col gap-1">
+              {allowedOrgs.map(org => {
+                const orgKey = org.orgCustomId ?? org.orgId ?? ''
+                const selectedKey = selectedOrg ? (selectedOrg.orgCustomId ?? selectedOrg.orgId ?? '') : ''
+                const isSelected = orgKey === selectedKey
+                return (
+                  <button
+                    key={orgKey}
+                    onClick={() => { setSelectedOrg(org); setMobileMenuOpen(false) }}
+                    className={clsx(
+                      'flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors w-full text-left',
+                      isSelected ? 'bg-white/20 text-white font-semibold' : 'text-white/80 hover:bg-white/10'
+                    )}
+                  >
+                    <Building2 className="w-3.5 h-3.5 flex-shrink-0" />
+                    {org.orgCustomId || org.orgId}
+                    {org.orgName && <span className="text-xs text-white/60 ml-1">{org.orgName}</span>}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+          <div className="border-t border-white/10 pt-1" />
           <Link href="/overview" onClick={() => setMobileMenuOpen(false)} className={clsx('flex items-center px-3 py-2.5 rounded-lg text-sm font-medium transition-colors', pathname === '/overview' ? 'bg-white/20 text-white' : 'text-white hover:bg-white/15')}>
             {t.nav.overview}
           </Link>

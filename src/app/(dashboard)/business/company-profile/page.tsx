@@ -172,7 +172,9 @@ export default function CompanyProfilePage() {
           <div className="flex-1 divide-y divide-gray-100">
             <div>
               <div className="px-6 py-3.5 bg-gray-50 border-b border-gray-100">
-                <SectionHeader title={cp.generalInfoSection} />
+                <SectionHeader icon={
+                  <svg className="w-3.5 h-3.5 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18M9 6.75h1.5m-1.5 3h1.5m-1.5 3h1.5m3-6H15m-1.5 3H15m-1.5 3H15M9 21v-3.375c0-.621.504-1.125 1.125-1.125h3.75c.621 0 1.125.504 1.125 1.125V21" /></svg>
+                } title={cp.generalInfoSection} />
               </div>
               <div className="px-6 py-5">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -185,7 +187,9 @@ export default function CompanyProfilePage() {
             </div>
             <div>
               <div className="px-6 py-3.5 bg-gray-50 border-b border-gray-100">
-                <SectionHeader title={cp.addressSection} />
+                <SectionHeader icon={
+                  <svg className="w-3.5 h-3.5 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" /></svg>
+                } title={cp.addressSection} />
               </div>
               <div className="px-6 py-5 space-y-4">
                 <FieldRow label={cp.fieldAddressTh} editing={editing} value={form.addressTh}><textarea value={form.addressTh} onChange={field('addressTh')} rows={2} className={inputCls()} placeholder={cp.fieldAddressTh} /></FieldRow>
@@ -194,7 +198,9 @@ export default function CompanyProfilePage() {
             </div>
             <div>
               <div className="px-6 py-3.5 bg-gray-50 border-b border-gray-100">
-                <SectionHeader title={cp.contactSection} />
+                <SectionHeader icon={
+                  <svg className="w-3.5 h-3.5 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z" /></svg>
+                } title={cp.contactSection} />
               </div>
               <div className="px-6 py-5">
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -208,7 +214,9 @@ export default function CompanyProfilePage() {
 
           <div className="w-full lg:w-64 xl:w-72 bg-gray-50/60 border-t lg:border-t-0 lg:border-l border-gray-100">
             <div className="px-6 py-3.5 bg-gray-50 border-b border-gray-100">
-              <SectionHeader title={cp.logoSection} />
+              <SectionHeader icon={
+                <svg className="w-3.5 h-3.5 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" /></svg>
+              } title={cp.logoSection} />
             </div>
             <div className="p-6">
               {form.logoImageBase64 ? (
@@ -281,10 +289,12 @@ function inputCls() {
   return 'w-full text-sm rounded-xl px-3 py-2 outline-none transition-all resize-none border border-gray-300 bg-white text-gray-900 placeholder-gray-400 hover:border-gray-400 focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500'
 }
 
-function SectionHeader({ title }: { title: string }) {
+function SectionHeader({ icon, title }: { icon: React.ReactNode; title: string }) {
   return (
     <div className="flex items-center gap-2.5">
-      <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-primary-100 to-primary-50 border border-primary-200 shadow-sm flex items-center justify-center flex-shrink-0" />
+      <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-primary-100 to-primary-50 border border-primary-200 shadow-sm flex items-center justify-center flex-shrink-0">
+        {icon}
+      </div>
       <p className="text-xs font-bold text-gray-500 uppercase tracking-widest">{title}</p>
     </div>
   )

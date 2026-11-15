@@ -9,8 +9,8 @@ const BASE = () => `/api/Organization/org/${getOrgId()}/action`
 
 export const organizationApi = {
   getCompanyProfile: () =>
-    client.get<CompanyProfile>(`${BASE()}/GetCompanyProfile`),
+    client.get<CompanyProfile>(`${BASE()}/company-profile`),
 
   updateCompanyProfile: (payload: UpdateCompanyProfilePayload) =>
-    client.post(`${BASE()}/UpdateCompanyProfile`, payload),
+    client.post(`${BASE()}/company-profile/update`, payload),
 }

@@ -24,9 +24,9 @@ export const translations = {
     },
     nav: {
       overview: 'ภาพรวม',
-      businessSetup: 'Business Setup',
-      business: 'Business',
-      generalInfo: 'General Info',
+      businessSetup: 'ข้อมูลธุรกิจ',
+      business: 'ธุรกิจ',
+      generalInfo: 'ข้อมูลทั่วไป',
       companyProfile: 'ข้อมูลบริษัท',
       selectTenant: 'เลือก Tenant',
       noTenantAvailable: 'ไม่มี Tenant ที่เข้าถึงได้',

@@ -129,6 +129,7 @@ function LoginForm() {
           </form>
 
           <p className="text-center text-xs text-gray-400 mt-8">{t.login.footer}</p>
+          <p className="text-center text-xs text-gray-400">Powered by <a href="https://dev-hubs.com" target="_blank" rel="noopener noreferrer" className="text-primary-600 hover:underline">Dev Hub</a></p>
         </div>
       </div>
     </div>

@@ -6,9 +6,10 @@ import Link from 'next/link'
 import { userApi } from '@/lib/api/user.api'
 import type { UserItem } from '@/lib/api/types'
 import { toast } from 'sonner'
-import { Search, ChevronLeft, ChevronRight, Trash2, Key, Ban, CheckCircle, MoreHorizontal, X, Users, Check } from 'lucide-react'
+import { Search, ChevronLeft, ChevronRight, Trash2, Key, Ban, CheckCircle, X, Users, Check } from 'lucide-react'
 import clsx from 'clsx'
 import { useLang } from '@/context/LanguageContext'
+import RowActionsMenu from '@/components/RowActionsMenu'
 
 function UsersContent() {
   const { t } = useLang()
@@ -100,7 +101,7 @@ function UsersContent() {
       await userApi.disableUserById(getUserId(user))
       toast.success(t.users.disabledSuccess)
       fetchUsers(page, appliedSearch)
-    } catch { toast.error(t.users.failedToDisable) }
+    } catch (err: unknown) { toast.error(err instanceof Error ? err.message : t.users.failedToDisable) }
   }
 
   const handleEnable = async (user: UserItem) => {
@@ -108,7 +109,7 @@ function UsersContent() {
       await userApi.enableUserById(getUserId(user))
       toast.success(t.users.enabledSuccess)
       fetchUsers(page, appliedSearch)
-    } catch { toast.error(t.users.failedToEnable) }
+    } catch (err: unknown) { toast.error(err instanceof Error ? err.message : t.users.failedToEnable) }
   }
 
   const processUrl = (url: string): string => {
@@ -340,7 +341,7 @@ function UsersContent() {
                         </span>
                       </td>
                       <td className="px-4 py-4 text-center" onClick={e => e.stopPropagation()}>
-                        <RowActions items={[
+                        <RowActionsMenu items={[
                           {
                             label: t.users.disableUser,
                             icon: <Ban className="w-4 h-4" />,
@@ -510,44 +511,6 @@ function ResetLinkModal({ link, loading, onClose }: { link?: string; loading?: b
           <button onClick={onClose} className="px-5 py-2.5 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 transition-colors">{t.users.close}</button>
         </div>
       </div>
-    </div>
-  )
-}
-
-type ActionItem = { label: string; icon: React.ReactNode; danger?: boolean; success?: boolean; disabled?: boolean; onClick: () => void }
-
-function RowActions({ items }: { items: ActionItem[] }) {
-  const [open, setOpen] = useState(false)
-  const ref = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    if (!open) return
-    const handler = (e: MouseEvent) => { if (!ref.current?.contains(e.target as Node)) setOpen(false) }
-    document.addEventListener('mousedown', handler)
-    return () => document.removeEventListener('mousedown', handler)
-  }, [open])
-
-  return (
-    <div ref={ref} className="relative flex justify-center">
-      <button onClick={e => { e.stopPropagation(); setOpen(v => !v) }} className="p-1.5 rounded-lg text-gray-400 hover:text-primary-600 hover:bg-gray-100 transition-colors">
-        <MoreHorizontal className="w-4 h-4" />
-      </button>
-      {open && (
-        <div className="absolute right-0 top-full mt-1 w-52 bg-white border border-gray-200 rounded-xl shadow-lg z-20 py-1 overflow-hidden">
-          {items.map((item, i) => (
-            <button
-              key={i}
-              onClick={() => { if (!item.disabled) { item.onClick(); setOpen(false) } }}
-              className={clsx(
-                'w-full flex items-center gap-2.5 px-4 py-2 text-sm text-left transition-colors',
-                item.disabled ? 'text-gray-300 cursor-not-allowed' : item.danger ? 'text-red-600 hover:bg-red-50' : item.success ? 'text-green-600 hover:bg-green-50' : 'text-gray-700 hover:bg-gray-50'
-              )}
-            >
-              {item.icon}{item.label}
-            </button>
-          ))}
-        </div>
-      )}
     </div>
   )
 }

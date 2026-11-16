@@ -106,8 +106,8 @@ function TenantListContent() {
       setTenants(Array.isArray(raw) ? raw : [])
       const rawCount = countRes.data
       setTotal(typeof rawCount === 'number' ? rawCount : 0)
-    } catch {
-      toast.error(t.tenant.failedToLoad)
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : t.tenant.failedToLoad)
     } finally { setLoading(false) }
   }
 
@@ -117,11 +117,11 @@ function TenantListContent() {
 
   const handleEnable = async (tenant: TenantItem) => {
     try { await tenantApi.enableTenantById(tenant.orgCustomId); toast.success(t.tenant.enabledSuccess); fetchTenants(page, statusFilter, appliedSearch) }
-    catch { toast.error(t.tenant.failedToEnable) }
+    catch (err: unknown) { toast.error(err instanceof Error ? err.message : t.tenant.failedToEnable) }
   }
   const handleDisable = async (tenant: TenantItem) => {
     try { await tenantApi.disableTenantById(tenant.orgCustomId); toast.success(t.tenant.disabledSuccess); fetchTenants(page, statusFilter, appliedSearch) }
-    catch { toast.error(t.tenant.failedToDisable) }
+    catch (err: unknown) { toast.error(err instanceof Error ? err.message : t.tenant.failedToDisable) }
   }
 
   const isActive = (tenant: TenantItem) => tenant.status?.toLowerCase() === 'active'

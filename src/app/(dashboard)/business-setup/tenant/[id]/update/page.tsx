@@ -52,8 +52,8 @@ function TenantUpdateContent() {
         setContactEmail(e); setInitEmail(e)
         setContactPhone(p); setInitPhone(p)
         setTags(tg); setInitTags(tg)
-      } catch {
-        toast.error(t.tenant.failedToLoadTenant)
+      } catch (err: unknown) {
+        toast.error(err instanceof Error ? err.message : t.tenant.failedToLoadTenant)
       } finally {
         setLoading(false)
       }

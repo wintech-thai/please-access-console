@@ -64,7 +64,7 @@ export default function CompanyProfilePage() {
   useEffect(() => {
     organizationApi.getCompanyProfile()
       .then(res => { const s = toFormState(res.data); setSaved(s); setForm(s) })
-      .catch(() => toast.error(cp.loadError))
+      .catch((err: unknown) => toast.error(err instanceof Error ? err.message : cp.loadError))
       .finally(() => setLoading(false))
   }, [])
 
@@ -83,7 +83,7 @@ export default function CompanyProfilePage() {
         LogoImageBase64: form.logoImageBase64,
       })
       setSaved({ ...form }); setEditing(false); toast.success(cp.saveSuccess)
-    } catch { toast.error(cp.saveError) }
+    } catch (err: unknown) { toast.error(err instanceof Error ? err.message : cp.saveError) }
     finally { setSaving(false) }
   }
 

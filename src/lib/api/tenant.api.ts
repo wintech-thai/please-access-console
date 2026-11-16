@@ -40,4 +40,10 @@ export const tenantApi = {
 
   deleteOrgUser: (orgCustomId: string, orgUserId: string) =>
     client.delete(`${ORG_BASE}/DeleteOrgUserById/${orgCustomId}/${orgUserId}`),
+
+  getOrgUserForgotPasswordLink: (orgCustomId: string, orgUserId: string) =>
+    client.get<{ forgotPasswordUrl?: string }>(`${ORG_BASE}/GetOrgUserForgotPasswordLink/${orgCustomId}/${orgUserId}`),
+
+  getOrgUserInviteLink: (orgCustomId: string, orgUserId: string) =>
+    client.get<{ registrationUrl?: string }>(`${ORG_BASE}/GetOrgUserInviteLink/${orgCustomId}/${orgUserId}`),
 }

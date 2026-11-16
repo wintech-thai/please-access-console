@@ -75,7 +75,7 @@ export default function AdminSidebar() {
       {/* Section label */}
       {!collapsed && (
         <div className="px-4 pt-5 pb-3">
-          <p className="text-xs font-semibold text-white/40 uppercase tracking-widest">Administrator</p>
+          <p className="text-xs font-semibold text-white/40 uppercase tracking-widest">{t.nav.administrator}</p>
         </div>
       )}
       {collapsed && <div className="pt-5 pb-3" />}

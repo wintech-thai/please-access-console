@@ -5,9 +5,10 @@ import { useRouter, useParams } from 'next/navigation'
 import { tenantApi } from '@/lib/api/tenant.api'
 import type { TenantItem, OrgUserItem } from '@/lib/api/types'
 import { toast } from 'sonner'
-import { ChevronLeft, Plus, Copy, Check, Ban, CheckCircle, Trash2 } from 'lucide-react'
+import { ChevronLeft, Plus, Copy, Check, Ban, CheckCircle, Trash2, Key, Link2, X } from 'lucide-react'
 import clsx from 'clsx'
 import { useLang } from '@/context/LanguageContext'
+import RowActionsMenu from '@/components/RowActionsMenu'
 
 function processRegistrationUrl(raw: string): string {
   if (typeof window === 'undefined') return raw
@@ -106,6 +107,8 @@ function TenantUsersContent() {
   const [registrationUrl, setRegistrationUrl] = useState<string | null>(null)
 
   const [confirm, setConfirm] = useState<{ title: string; onConfirm: () => void } | null>(null)
+  const [resetLinkModal, setResetLinkModal] = useState<{ open: boolean; link?: string; loading?: boolean }>({ open: false })
+  const [registerLinkModal, setRegisterLinkModal] = useState<{ open: boolean; link?: string; loading?: boolean }>({ open: false })
 
   const loadData = useCallback(async () => {
     setLoading(true)
@@ -118,8 +121,8 @@ function TenantUsersContent() {
         const rawUsers = usersRes.data as unknown
         setUsers(Array.isArray(rawUsers) ? rawUsers : ((rawUsers as { users?: OrgUserItem[] })?.users ?? []))
       }
-    } catch {
-      toast.error(t.tenant.failedToLoadUsers)
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : t.tenant.failedToLoadUsers)
     } finally {
       setLoading(false)
     }
@@ -149,8 +152,8 @@ function TenantUsersContent() {
             toast.success(t.tenant.userEnabledSuccess)
           }
           await refreshUsers(tenant.orgCustomId)
-        } catch {
-          toast.error(t.tenant.failedToToggleUser)
+        } catch (err: unknown) {
+          toast.error(err instanceof Error ? err.message : t.tenant.failedToToggleUser)
         }
       },
     })
@@ -166,11 +169,37 @@ function TenantUsersContent() {
           await tenantApi.deleteOrgUser(tenant.orgCustomId, user.orgUserId)
           toast.success(t.tenant.deleteUserSuccess)
           await refreshUsers(tenant.orgCustomId)
-        } catch {
-          toast.error(t.tenant.failedToDeleteUser)
+        } catch (err: unknown) {
+          toast.error(err instanceof Error ? err.message : t.tenant.failedToDeleteUser)
         }
       },
     })
+  }
+
+  const handleGetResetLink = async (user: OrgUserItem) => {
+    if (!tenant?.orgCustomId) return
+    setResetLinkModal({ open: true, loading: true })
+    try {
+      const res = await tenantApi.getOrgUserForgotPasswordLink(tenant.orgCustomId, user.orgUserId)
+      const raw = res.data?.forgotPasswordUrl ?? ''
+      setResetLinkModal({ open: true, link: raw ? processRegistrationUrl(raw) : '' })
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : t.users.failedToGetResetLink)
+      setResetLinkModal({ open: false })
+    }
+  }
+
+  const handleGetRegisterLink = async (user: OrgUserItem) => {
+    if (!tenant?.orgCustomId) return
+    setRegisterLinkModal({ open: true, loading: true })
+    try {
+      const res = await tenantApi.getOrgUserInviteLink(tenant.orgCustomId, user.orgUserId)
+      const raw = res.data?.registrationUrl ?? ''
+      setRegisterLinkModal({ open: true, link: raw ? processRegistrationUrl(raw) : '' })
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : t.users.failedToGetInviteLink)
+      setRegisterLinkModal({ open: false })
+    }
   }
 
   const handleInviteSubmit = async (e: React.FormEvent) => {
@@ -191,8 +220,8 @@ function TenantUsersContent() {
       const rawUrl = (data?.registrationUrl ?? data?.RegistrationUrl ?? '') as string
       setRegistrationUrl(rawUrl ? processRegistrationUrl(rawUrl) : rawUrl)
       toast.success(t.tenant.invitedSuccess)
-    } catch {
-      toast.error(t.tenant.failedToInvite)
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : t.tenant.failedToInvite)
     } finally {
       setInviting(false)
     }
@@ -234,6 +263,26 @@ function TenantUsersContent() {
           onCancel={() => setConfirm(null)}
           cancelLabel={t.admin.cancel}
           confirmLabel={t.admin.yes}
+        />
+      )}
+
+      {resetLinkModal.open && (
+        <LinkModal
+          link={resetLinkModal.link}
+          loading={resetLinkModal.loading}
+          title={t.users.resetLinkTitle}
+          subtitle={t.users.resetLinkSubtitle}
+          onClose={() => setResetLinkModal({ open: false })}
+        />
+      )}
+
+      {registerLinkModal.open && (
+        <LinkModal
+          link={registerLinkModal.link}
+          loading={registerLinkModal.loading}
+          title={t.users.registerLinkTitle}
+          subtitle={t.users.registerLinkSubtitle}
+          onClose={() => setRegisterLinkModal({ open: false })}
         />
       )}
 
@@ -416,28 +465,35 @@ function TenantUsersContent() {
                         <td className="px-4 py-3 border-b border-gray-100 whitespace-nowrap">
                           <StatusBadge status={user.userStatus} />
                         </td>
-                        <td className="px-4 py-3 border-b border-gray-100 whitespace-nowrap" onClick={e => e.stopPropagation()}>
-                          {isPending ? (
-                            <button
-                              onClick={() => handleDeleteUser(user)}
-                              className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-full ring-1 transition-colors text-red-600 bg-red-50 ring-red-200 hover:bg-red-100"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                              {t.tenant.deleteUser}
-                            </button>
-                          ) : (
-                            <button
-                              onClick={() => handleToggleUser(user)}
-                              className={clsx('inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-full ring-1 transition-colors',
-                                isActive
-                                  ? 'text-red-600 bg-red-50 ring-red-200 hover:bg-red-100'
-                                  : 'text-emerald-600 bg-emerald-50 ring-emerald-200 hover:bg-emerald-100'
-                              )}
-                            >
-                              {isActive ? <Ban className="w-3.5 h-3.5" /> : <CheckCircle className="w-3.5 h-3.5" />}
-                              {isActive ? t.tenant.disableUser : t.tenant.enableUser}
-                            </button>
-                          )}
+                        <td className="px-4 py-3 border-b border-gray-100 whitespace-nowrap text-center" onClick={e => e.stopPropagation()}>
+                          <RowActionsMenu items={[
+                            {
+                              label: t.users.resetPasswordLink,
+                              icon: <Key className="w-4 h-4" />,
+                              disabled: !isActive,
+                              onClick: () => handleGetResetLink(user),
+                            },
+                            {
+                              label: t.users.createRegisterLink,
+                              icon: <Link2 className="w-4 h-4" />,
+                              disabled: !isPending,
+                              onClick: () => handleGetRegisterLink(user),
+                            },
+                            {
+                              label: isActive ? t.tenant.disableUser : t.tenant.enableUser,
+                              icon: isActive ? <Ban className="w-4 h-4" /> : <CheckCircle className="w-4 h-4" />,
+                              danger: isActive,
+                              hidden: isPending,
+                              onClick: () => handleToggleUser(user),
+                            },
+                            {
+                              label: t.tenant.deleteUser,
+                              icon: <Trash2 className="w-4 h-4" />,
+                              danger: true,
+                              hidden: !isPending,
+                              onClick: () => handleDeleteUser(user),
+                            },
+                          ]} />
                         </td>
                       </tr>
                     )
@@ -483,6 +539,61 @@ function TagBadge({ children }: { children: React.ReactNode }) {
 function parseCsv(value: string | null | undefined): string[] {
   if (!value) return []
   return value.split(',').map(s => s.trim()).filter(Boolean)
+}
+
+function LinkModal({ link, loading, title, subtitle, onClose }: { link?: string; loading?: boolean; title: string; subtitle: string; onClose: () => void }) {
+  const { t } = useLang()
+  const [copied, setCopied] = useState(false)
+  const handleCopy = () => {
+    if (!link) return
+    navigator.clipboard.writeText(link)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+  return (
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={onClose}>
+      <div className="w-full max-w-lg bg-white rounded-2xl shadow-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
+        <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between">
+          <div>
+            <h3 className="text-base font-bold text-gray-900">{title}</h3>
+            <p className="text-xs text-gray-500 mt-0.5">{subtitle}</p>
+          </div>
+          <button onClick={onClose} className="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+        <div className="px-6 py-5">
+          {loading ? (
+            <div className="flex items-center justify-center gap-2 py-8 text-gray-400">
+              <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
+              <span className="text-sm">{t.users.generatingLink}</span>
+            </div>
+          ) : link ? (
+            <>
+              <div className="flex items-center gap-2 p-3 bg-primary-50 rounded-xl border border-primary-100">
+                <span className="flex-1 text-sm text-primary-800 break-all line-clamp-2 font-mono">{link}</span>
+                <button
+                  onClick={handleCopy}
+                  className={clsx('flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors', copied ? 'bg-green-100 text-green-700' : 'bg-white border border-primary-200 text-primary-600 hover:bg-primary-100')}
+                >
+                  {copied ? t.users.copied : t.users.copy}
+                </button>
+              </div>
+              <p className="text-xs text-gray-400 mt-3">{t.users.resetLinkExpiry}</p>
+            </>
+          ) : (
+            <p className="text-sm text-gray-400 text-center py-4">{t.users.noRegistrationLink}</p>
+          )}
+        </div>
+        <div className="flex justify-end px-6 pb-5">
+          <button onClick={onClose} className="px-5 py-2.5 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 transition-colors">{t.users.close}</button>
+        </div>
+      </div>
+    </div>
+  )
 }
 
 export default function TenantUsersPage() {

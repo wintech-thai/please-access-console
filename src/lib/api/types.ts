@@ -230,3 +230,59 @@ export interface UpdateApiKeyPayload {
   Roles?: string[]
   tags?: string
 }
+
+// ─── Portal Page ─────────────────────────────────────────────────────────────
+
+export interface PortalPageItem {
+  portalPageId: string
+  orgId?: string | null
+  code?: string | null
+  authMethod?: string | null
+  theme?: string | null
+  isDefault?: boolean | null
+  isEnabled?: boolean | null
+  apiKeyId?: string | null
+  apiCode?: string | null
+  createdDate?: string | null
+}
+
+export interface GetPortalPagesPayload {
+  Offset?: number
+  Limit?: number
+  FullTextSearch?: string
+  AuthMethod?: string
+  Status?: string
+}
+
+export interface AddPortalPagePayload {
+  Code: string
+  AuthMethod?: string
+  Theme?: string
+  IsDefault?: boolean
+  IsEnabled?: boolean
+}
+
+export interface UpdatePortalPagePayload {
+  Code: string
+  AuthMethod?: string
+  Theme?: string
+}
+
+export interface PortalSessionItem {
+  portalSessionId: string
+  orgId?: string | null
+  portalPageCode?: string | null
+  parametersJson?: string | null
+  status?: string | null
+  statusDesc?: string | null
+  createdDate?: string | null
+  loginDate?: string | null
+}
+
+export interface GetPortalSessionsPayload {
+  Offset?: number
+  Limit?: number
+  FullTextSearch?: string
+  Status?: string
+  PortalPageCode?: string
+}

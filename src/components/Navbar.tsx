@@ -15,6 +15,7 @@ import { useBrand } from '@/context/BrandContext'
 
 const BUSINESS_SETUP_ITEMS = [
   { key: 'tenant', href: '/business-setup/tenant', label: { th: 'Tenant', en: 'Tenant' } },
+  { key: 'session', href: '/business-setup/session', label: { th: 'Session', en: 'Session' } },
 ]
 
 export default function Navbar() {

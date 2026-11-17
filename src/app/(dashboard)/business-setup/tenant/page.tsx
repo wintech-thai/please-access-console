@@ -6,7 +6,7 @@ import { useSearchParams, usePathname, useRouter } from 'next/navigation'
 import { tenantApi } from '@/lib/api/tenant.api'
 import type { TenantItem } from '@/lib/api/types'
 import { toast } from 'sonner'
-import { Search, Plus, MoreHorizontal, Ban, CheckCircle, Users, Building2, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Search, Plus, MoreHorizontal, Ban, CheckCircle, Users, Building2, ChevronLeft, ChevronRight, Link2 } from 'lucide-react'
 import clsx from 'clsx'
 import { useLang } from '@/context/LanguageContext'
 
@@ -149,7 +149,7 @@ function TenantListContent() {
           <h1 className="text-2xl font-bold text-gray-900">{t.tenant.title}</h1>
           <p className="text-sm text-gray-500 mt-0.5">{t.tenant.subtitle}</p>
         </div>
-        <Link href="/business-setup/tenant/create" className="flex items-center gap-2 px-4 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-primary-600 to-cyan-600 hover:from-primary-500 hover:to-cyan-500 rounded-xl transition-all shadow-lg shadow-primary-900/40">
+        <Link href="/business-setup/tenant/create" className="flex items-center gap-2 px-4 py-2.5 text-sm font-semibold text-white bg-primary-600 hover:bg-primary-700 rounded-lg transition-colors">
           <Plus className="w-4 h-4" />
           {t.tenant.addTenant}
         </Link>
@@ -256,6 +256,9 @@ function TenantListContent() {
                               <div className="border-t border-gray-100 my-1" />
                               <button onClick={e => { e.stopPropagation(); setOpenMenuId(null); sessionStorage.setItem('access_tenant_highlight', tenant.orgCustomId); router.push(`/business-setup/tenant/${tenant.orgCustomId}/users`) }} className="flex items-center gap-2.5 w-full px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
                                 <Users className="w-4 h-4 flex-shrink-0" />{t.tenant.viewUsers}
+                              </button>
+                              <button onClick={e => { e.stopPropagation(); setOpenMenuId(null); sessionStorage.setItem('access_tenant_highlight', tenant.orgCustomId); router.push(`/business-setup/tenant/${tenant.orgCustomId}/portal-pages`) }} className="flex items-center gap-2.5 w-full px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                                <Link2 className="w-4 h-4 flex-shrink-0" />{t.portalPage.title}
                               </button>
                             </div>
                           )}

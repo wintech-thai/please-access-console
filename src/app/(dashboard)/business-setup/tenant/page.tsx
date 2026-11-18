@@ -113,7 +113,12 @@ function TenantListContent() {
 
   useEffect(() => { fetchTenants(page, statusFilter, appliedSearch) }, [page, itemsPerPage, statusFilter, appliedSearch])
 
-  const handleSearch = () => { setAppliedSearch(searchTerm); setPage(1) }
+  const handleSearch = () => {
+    setAppliedSearch(searchTerm)
+    setPage(1)
+    //เรียกตรงด้วย เผื่อ searchTerm/page เดิมไม่เปลี่ยน useEffect จะไม่ trigger ให้ กด search ซ้ำแล้วไม่ refresh
+    fetchTenants(1, statusFilter, searchTerm)
+  }
 
   const handleEnable = async (tenant: TenantItem) => {
     try { await tenantApi.enableTenantById(tenant.orgCustomId); toast.success(t.tenant.enabledSuccess); fetchTenants(page, statusFilter, appliedSearch) }

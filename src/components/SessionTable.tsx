@@ -51,14 +51,16 @@ export default function SessionTable({ orgId, showOrgColumn }: { orgId: string; 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const fetchSessions = useCallback(async () => {
+  const fetchSessions = useCallback(async (pageOverride?: number, searchOverride?: string) => {
     if (!orgId) return
+    const currentPage = pageOverride ?? page
+    const currentSearch = searchOverride ?? appliedSearch
     setLoading(true)
     try {
       const payload = {
-        Offset: (page - 1) * itemsPerPage,
+        Offset: (currentPage - 1) * itemsPerPage,
         Limit: itemsPerPage,
-        FullTextSearch: appliedSearch || undefined,
+        FullTextSearch: currentSearch || undefined,
         Status: statusFilter || undefined,
       }
       const [listRes, countRes] = await Promise.all([
@@ -78,7 +80,12 @@ export default function SessionTable({ orgId, showOrgColumn }: { orgId: string; 
 
   useEffect(() => { fetchSessions() }, [fetchSessions])
 
-  const handleSearch = () => { setAppliedSearch(searchTerm); setPage(1) }
+  const handleSearch = () => {
+    setAppliedSearch(searchTerm)
+    setPage(1)
+    //เรียกตรงด้วย เผื่อ searchTerm/page เดิมไม่เปลี่ยน useEffect จะไม่ trigger ให้ กด search ซ้ำแล้วไม่ refresh
+    fetchSessions(1, searchTerm)
+  }
 
   const formatDate = (d?: string | null) => {
     if (!d) return '—'

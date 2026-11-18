@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { X, FileJson, Table as TableIcon, Copy, Check } from 'lucide-react'
+import { X, FileJson, Table as TableIcon, Copy, Check, Hash, ToggleLeft, Type } from 'lucide-react'
 import clsx from 'clsx'
 import { useLang } from '@/context/LanguageContext'
 import type { PortalSessionItem } from '@/lib/api/types'
@@ -12,6 +12,19 @@ function flattenParameters(json?: string | null): Record<string, unknown> {
     const parsed = JSON.parse(json)
     return typeof parsed === 'object' && parsed !== null ? parsed : {}
   } catch { return {} }
+}
+
+const getTypeIcon = (val: unknown) => {
+  if (typeof val === 'number') return <Hash size={12} />
+  if (typeof val === 'boolean') return <ToggleLeft size={12} />
+  return <Type size={12} />
+}
+
+const getValueColor = (val: unknown) => {
+  if (typeof val === 'number') return 'text-emerald-600'
+  if (typeof val === 'boolean') return 'text-primary-600 font-bold'
+  if (val === null || val === undefined || val === '') return 'text-gray-400 italic'
+  return 'text-amber-600'
 }
 
 const highlightJson = (json: unknown) =>
@@ -33,6 +46,7 @@ export default function SessionFlyout({ session, showOrg, onClose }: { session: 
   const ts = t.session
   const [tab, setTab] = useState<'table' | 'json'>('table')
   const [copiedJson, setCopiedJson] = useState(false)
+  const [copiedId, setCopiedId] = useState<string | null>(null)
 
   const params = useMemo(() => flattenParameters(session?.parametersJson), [session])
 
@@ -56,6 +70,12 @@ export default function SessionFlyout({ session, showOrg, onClose }: { session: 
     navigator.clipboard.writeText(JSON.stringify(jsonObject, null, 2))
     setCopiedJson(true)
     setTimeout(() => setCopiedJson(false), 2000)
+  }
+
+  const handleCopyValue = (val: unknown, id: string) => {
+    navigator.clipboard.writeText(val === null || val === undefined ? '' : String(val))
+    setCopiedId(id)
+    setTimeout(() => setCopiedId(null), 2000)
   }
 
   return (
@@ -94,8 +114,26 @@ export default function SessionFlyout({ session, showOrg, onClose }: { session: 
               <div className="flex-1 overflow-auto pb-8 custom-scrollbar">
                 {fields.map(([k, v]) => (
                   <div key={k} className="flex border-b border-gray-50 hover:bg-primary-50/60 transition-colors">
-                    <div className="w-[38%] px-4 py-2.5 border-r border-gray-100 font-semibold text-primary-700 text-xs truncate" title={k}>{k}</div>
-                    <div className="w-[62%] px-4 py-2.5 text-xs text-gray-700 break-all">{v === null || v === undefined || v === '' ? '—' : String(v)}</div>
+                    <div className="w-[38%] px-4 py-2.5 border-r border-gray-100 flex items-center gap-2 min-w-0">
+                      <span className="text-gray-400 hidden sm:inline-block flex-shrink-0">{getTypeIcon(v)}</span>
+                      <span className="font-semibold text-primary-700 truncate text-xs select-text cursor-text" title={k}>{k}</span>
+                    </div>
+                    <div className="w-[62%] px-4 py-2.5 min-w-0">
+                      <div className="relative group/val pr-8 flex items-start min-h-[20px]">
+                        <span className={clsx('font-mono text-xs select-text cursor-text break-all', getValueColor(v))}>
+                          {v === null || v === undefined || v === '' ? '—' : String(v)}
+                        </span>
+                        <button
+                          onClick={() => handleCopyValue(v, k)}
+                          className={clsx(
+                            'absolute right-0 top-0 p-1.5 rounded-md bg-white border border-gray-200 text-gray-400 opacity-0 group-hover/val:opacity-100 transition-all flex-shrink-0 hover:border-primary-300 hover:text-primary-600',
+                            copiedId === k && 'opacity-100 text-green-600 border-green-300'
+                          )}
+                        >
+                          {copiedId === k ? <Check size={12} /> : <Copy size={12} />}
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 ))}
               </div>

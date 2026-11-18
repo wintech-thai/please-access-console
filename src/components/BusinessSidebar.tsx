@@ -16,21 +16,15 @@ const GENERAL_INFO_ITEMS = [
       </svg>
     ),
   },
-  {
-    href: '/business/session',
-    labelKey: 'session' as const,
-    icon: (
-      <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 7.5V6.108c0-1.135.845-2.098 1.976-2.192.373-.03.748-.057 1.123-.08M15.75 18H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08M15.75 18.75v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 01-1.125-1.125V11.25c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 011.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V16.5a9.06 9.06 0 00-1.5-5.397m-9.75 0h2.25c.621 0 1.125-.504 1.125-1.125V9.75" />
-      </svg>
-    ),
-  },
 ]
 
 export default function BusinessSidebar() {
   const { t } = useLang()
   const pathname = usePathname()
   const [collapsed, setCollapsed] = useState(false)
+
+  //หน้า Session ไม่มีเมนูของตัวเองใน sidebar นี้ ซ่อนไปเลยแทนที่จะค้างโชว์ Company Profile ผิด ๆ
+  if (pathname.startsWith('/business/session')) return null
 
   return (
     <aside

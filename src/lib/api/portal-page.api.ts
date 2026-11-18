@@ -35,4 +35,8 @@ export const portalPageApi = {
 
   createPortalPageApiKey: (orgId: string, portalPageId: string, keyName?: string, keyDescription?: string) =>
     client.post<{ status?: string; description?: string; apiKey?: ApiKeyItem }>(`${BASE}/CreatePortalPageApiKey/${orgId}/${portalPageId}`, { KeyName: keyName, KeyDescription: keyDescription }),
+
+  //คืน api key เดิมถ้ามีอยู่แล้ว สร้างใหม่เฉพาะตอนยังไม่เคยมี (ไม่ทำลิงก์เดิมพัง)
+  getPortalPageApiKey: (orgId: string, portalPageId: string, keyName?: string, keyDescription?: string) =>
+    client.post<{ status?: string; description?: string; apiKey?: ApiKeyItem }>(`${BASE}/GetPortalPageApiKey/${orgId}/${portalPageId}`, { KeyName: keyName, KeyDescription: keyDescription }),
 }

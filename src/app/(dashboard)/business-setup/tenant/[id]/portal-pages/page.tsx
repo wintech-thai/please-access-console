@@ -6,7 +6,7 @@ import { tenantApi } from '@/lib/api/tenant.api'
 import { portalPageApi } from '@/lib/api/portal-page.api'
 import type { TenantItem, PortalPageItem } from '@/lib/api/types'
 import { toast } from 'sonner'
-import { ChevronLeft, ChevronRight, Plus, Copy, Check, Ban, CheckCircle, Link2, Key, Star, X, ExternalLink } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Plus, Copy, Check, Ban, CheckCircle, Link2, Star, X, ExternalLink } from 'lucide-react'
 import clsx from 'clsx'
 import { useLang } from '@/context/LanguageContext'
 import RowActionsMenu from '@/components/RowActionsMenu'
@@ -323,29 +323,22 @@ function PortalPagesContent() {
     }
   }
 
-  const handleGetPortalUrl = (page: PortalPageItem) => {
+  const handleGetPortalUrl = async (page: PortalPageItem) => {
     if (!tenant?.orgCustomId) return
-    setConfirm({
-      title: tp.confirmCreateApiKeyTitle,
-      desc: tp.confirmCreateApiKeyDesc,
-      onConfirm: async () => {
-        setConfirm(null)
-        setUrlModal({ open: true, loading: true })
-        try {
-          const res = await portalPageApi.createPortalPageApiKey(tenant.orgCustomId, page.portalPageId)
-          const rawKey = res.data?.apiKey?.apiKey
-          if (!rawKey) throw new Error(tp.failedToGetUrl)
-          const domain = tenantDomain()
-          const tenantId = tenant.orgId || tenant.orgCustomId
-          const url = `${window.location.protocol}//${domain}/login-portal/${tenant.orgCustomId}/${tenantId}?key=${encodeURIComponent(rawKey)}&code=${encodeURIComponent(page.code ?? '')}`
-          setUrlModal({ open: true, link: url })
-          loadData()
-        } catch (err: unknown) {
-          toast.error(err instanceof Error ? err.message : tp.failedToGetUrl)
-          setUrlModal({ open: false })
-        }
-      },
-    })
+    setUrlModal({ open: true, loading: true })
+    try {
+      const res = await portalPageApi.getPortalPageApiKey(tenant.orgCustomId, page.portalPageId)
+      const rawKey = res.data?.apiKey?.apiKey
+      if (!rawKey) throw new Error(tp.failedToGetUrl)
+      const domain = tenantDomain()
+      const tenantId = tenant.orgId || tenant.orgCustomId
+      const url = `${window.location.protocol}//${domain}/login-portal/${tenant.orgCustomId}/${tenantId}?key=${encodeURIComponent(rawKey)}&code=${encodeURIComponent(page.code ?? '')}`
+      setUrlModal({ open: true, link: url })
+      loadData()
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : tp.failedToGetUrl)
+      setUrlModal({ open: false })
+    }
   }
 
   const formatDate = (d?: string | null) => {
@@ -488,7 +481,14 @@ function PortalPagesContent() {
                             className="rounded border-gray-300 text-primary-600 focus:ring-primary-500 w-4 h-4"
                           />
                         </td>
-                        <td className="px-4 py-3 border-b border-gray-100 whitespace-nowrap text-sm font-semibold text-gray-900">{row.code ?? '—'}</td>
+                        <td className="px-4 py-3 border-b border-gray-100 whitespace-nowrap text-sm" onClick={e => e.stopPropagation()}>
+                          <button
+                            onClick={() => setFormModal({ open: true, initial: row })}
+                            className="font-semibold text-primary-600 hover:text-primary-700 hover:underline"
+                          >
+                            {row.code ?? '—'}
+                          </button>
+                        </td>
                         <td className="px-4 py-3 border-b border-gray-100 whitespace-nowrap text-sm text-gray-600">{row.authMethod ?? '—'}</td>
                         <td className="px-4 py-3 border-b border-gray-100 whitespace-nowrap text-sm text-gray-600">{row.theme ?? '—'}</td>
                         <td className="px-4 py-3 border-b border-gray-100 whitespace-nowrap">
@@ -513,11 +513,6 @@ function PortalPagesContent() {
                               icon: <Star className="w-4 h-4" />,
                               hidden: isDefault,
                               onClick: () => handleSetDefault(row),
-                            },
-                            {
-                              label: tp.edit,
-                              icon: <Key className="w-4 h-4" />,
-                              onClick: () => setFormModal({ open: true, initial: row }),
                             },
                             {
                               label: isActive ? tp.disablePortalPage : tp.enablePortalPage,

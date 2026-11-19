@@ -121,7 +121,7 @@ export default function CompanyProfilePage() {
   }
 
   return (
-    <div className="flex flex-col min-h-full gap-5">
+    <div className="flex flex-col h-full overflow-y-auto gap-5">
       <div className="relative bg-gradient-to-br from-primary-700 via-primary-600 to-primary-800 rounded-2xl overflow-hidden shadow-lg">
         <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/[0.03] to-white/[0.07] pointer-events-none" />
         <div className="absolute -right-16 -top-16 w-72 h-72 rounded-full bg-white/[0.05] animate-pulse pointer-events-none" style={{ animationDuration: '4s' }} />

@@ -21,11 +21,19 @@ function LoginPortalContent() {
   const [showPassword, setShowPassword] = useState(false)
 
   useEffect(() => {
-    //forward ทุก query param ที่ Mikrotik ส่งมา (mac/ip/link-orig ฯลฯ) ไม่ใช่แค่ key/code
-    const query = searchParams.toString()
-    const url = `/api/proxy/public-api/PublicPortal/action/AddPortalSession/${encodeURIComponent(orgId)}/${encodeURIComponent(tenantId)}${query ? `?${query}` : ''}`
+    //key auth ผ่าน Basic auth header แทน ไม่ส่งเป็น query param แล้ว (เลี่ยงไม่ให้ key หลุดไปอยู่ใน audit log ของ session)
+    //ส่วน query param อื่นๆ ที่ Mikrotik ส่งมา (mac/ip/link-orig ฯลฯ) ยัง forward ต่อไปเหมือนเดิม
+    const params = new URLSearchParams(searchParams.toString())
+    const key = params.get('key')
+    params.delete('key')
+    const query = params.toString()
+    const url = `/api/proxy/api/PortalSession/org/${encodeURIComponent(orgId)}/action/AddPortalSession/${encodeURIComponent(tenantId)}${query ? `?${query}` : ''}`
 
-    fetch(url, { method: 'GET', credentials: 'omit' })
+    fetch(url, {
+      method: 'GET',
+      credentials: 'omit',
+      headers: key ? { Authorization: `Basic ${btoa(`portal-page:${key}`)}` } : {},
+    })
       .then(res => res.json())
       .then(data => {
         const session = data?.portalSession

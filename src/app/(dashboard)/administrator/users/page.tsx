@@ -185,7 +185,7 @@ function UsersContent() {
     : '/administrator/users/invite'
 
   return (
-    <div className="flex flex-col min-h-full">
+    <div className="flex flex-col h-full">
       <div className="flex items-start justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">{t.users.title}</h1>
@@ -234,10 +234,10 @@ function UsersContent() {
         </div>
 
         {/* Table */}
-        <div className="overflow-x-auto flex-1 min-h-0">
+        <div className="overflow-auto flex-1 min-h-0">
           <table className="min-w-full">
-            <thead>
-              <tr className="bg-gray-50 border-b border-gray-200">
+            <thead className="sticky top-0 z-10 bg-gray-50">
+              <tr className="border-b border-gray-200">
                 <th className="w-12 px-6 py-3.5">
                   <input
                     type="checkbox"

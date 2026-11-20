@@ -8,6 +8,7 @@ import { toast } from 'sonner'
 import { ChevronLeft, X } from 'lucide-react'
 import { useUnsavedChanges } from '@/hooks/useUnsavedChanges'
 import LeaveConfirmModal from '@/components/LeaveConfirmModal'
+import JsonViewModal from '@/components/JsonViewModal'
 import { useLang } from '@/context/LanguageContext'
 
 function parseCsv(value: string | null | undefined): string[] {
@@ -31,6 +32,7 @@ function TenantUpdateContent() {
   const [saving, setSaving] = useState(false)
   const [isDirty, setIsDirty] = useState(false)
   const { showConfirm, guardNavigation, confirmLeave, cancelLeave } = useUnsavedChanges(isDirty)
+  const [showJson, setShowJson] = useState(false)
 
   const [initName, setInitName] = useState('')
   const [initEmail, setInitEmail] = useState('')
@@ -121,6 +123,7 @@ function TenantUpdateContent() {
   return (
     <div className="flex flex-col overflow-hidden h-[calc(100dvh-5rem)] sm:h-[calc(100dvh-6.5rem)]">
       {showConfirm && <LeaveConfirmModal onConfirm={confirmLeave} onCancel={cancelLeave} />}
+      {showJson && <JsonViewModal data={tenant} onClose={() => setShowJson(false)} copyLabel={t.tenant.copyJson} copiedLabel={t.tenant.copied} />}
 
       <div className="flex-none flex items-center gap-3 mb-6">
         <button
@@ -129,10 +132,19 @@ function TenantUpdateContent() {
         >
           <ChevronLeft className="w-5 h-5" />
         </button>
-        <div>
+        <div className="flex-1">
           <h1 className="text-2xl font-bold text-gray-900">{t.tenant.editTitle}</h1>
           <p className="text-base text-gray-500 mt-0.5">{tenant?.orgCustomId || id}</p>
         </div>
+        {tenant && (
+          <button
+            type="button"
+            onClick={() => setShowJson(true)}
+            className="px-2 py-1 text-[11px] font-mono font-semibold text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-md border border-gray-200 transition-colors"
+          >
+            {'{ }'}
+          </button>
+        )}
       </div>
 
       <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0 overflow-hidden">

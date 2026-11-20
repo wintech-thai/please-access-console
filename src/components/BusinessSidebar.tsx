@@ -23,6 +23,9 @@ export default function BusinessSidebar() {
   const pathname = usePathname()
   const [collapsed, setCollapsed] = useState(false)
 
+  //หน้า Session ไม่มีเมนูของตัวเองใน sidebar นี้ ซ่อนไปเลยแทนที่จะค้างโชว์ Company Profile ผิด ๆ
+  if (pathname.startsWith('/business/session')) return null
+
   return (
     <aside
       className={clsx(

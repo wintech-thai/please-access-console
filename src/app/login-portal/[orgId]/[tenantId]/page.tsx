@@ -51,6 +51,7 @@ function LoginPortalContent() {
     fetch(url, {
       method: 'GET',
       credentials: 'omit',
+      cache: 'no-store', //เป็น GET เดิมซ้ำ querystring เดิมได้บ่อย (ผู้ใช้กดลิงก์เดิมซ้ำ) กัน browser cache ตอบ response เก่าไม่ยอมยิง request ใหม่ไปเช็คสถานะล่าสุดจริง
       headers: key ? { Authorization: `Basic ${btoa(`portal-page:${key}`)}` } : {},
     })
       .then(async res => {

@@ -81,15 +81,15 @@ export default function NavbarTenant() {
     <header className="bg-gradient-to-r from-primary-700 to-primary-600 shadow-lg z-30 relative">
       <div className="flex items-center h-14 px-4 gap-3">
         {/* Brand */}
-        <Link href="/overview" className="flex items-center gap-2 flex-shrink-0">
+        <Link href="/overview" className="flex items-center gap-2.5 flex-shrink-0">
           {logoUrl ? (
-            <img src={logoUrl} alt={displayName} className="w-8 h-8 object-contain" />
+            <img src={logoUrl} alt={displayName} className="w-9 h-9 object-contain" />
           ) : (
-            <AccessLogoIcon className="w-8 h-8 flex-shrink-0" />
+            <AccessLogoIcon className="w-9 h-9 flex-shrink-0" />
           )}
           <div className="hidden sm:block">
             <p className="text-white font-bold text-sm leading-tight">{displayName}</p>
-            <p className="text-primary-200 text-[10px] leading-tight">Access</p>
+            <p className="text-primary-200 text-xs leading-tight">Access</p>
           </div>
         </Link>
 

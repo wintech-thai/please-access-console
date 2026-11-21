@@ -9,17 +9,50 @@ import type { PortalSessionItem } from '@/lib/api/types'
 import { useLang } from '@/context/LanguageContext'
 import SessionFlyout from '@/components/SessionFlyout'
 
-function StatusBadge({ status }: { status?: string | null }) {
+function formatAge(createdDate?: string | null): string {
+  if (!createdDate) return ''
+  const diffMs = Date.now() - new Date(createdDate).getTime()
+  if (diffMs < 0) return ''
+  const totalMin = Math.floor(diffMs / 60_000)
+  const hours = Math.floor(totalMin / 60)
+  const mins = totalMin % 60
+  if (hours === 0) return `${mins}min`
+  return `${hours}h ${mins}min`
+}
+
+function StatusBadge({ status, createdDate }: { status?: string | null; createdDate?: string | null }) {
   const lower = status?.toLowerCase()
   const cfg = lower === 'authorized'
     ? { bg: 'bg-emerald-50 text-emerald-700 ring-emerald-200', dot: 'bg-emerald-500' }
     : lower === 'failed'
       ? { bg: 'bg-red-50 text-red-700 ring-red-200', dot: 'bg-red-500' }
       : { bg: 'bg-amber-50 text-amber-700 ring-amber-200', dot: 'bg-amber-400' }
+  if (lower !== 'pending') {
+    return (
+      <span className={clsx('inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ring-1', cfg.bg)}>
+        <span className={clsx('w-1.5 h-1.5 rounded-full flex-shrink-0', cfg.dot)} />
+        {status ?? '—'}
+      </span>
+    )
+  }
+  const age = formatAge(createdDate)
   return (
-    <span className={clsx('inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ring-1', cfg.bg)}>
-      <span className={clsx('w-1.5 h-1.5 rounded-full flex-shrink-0', cfg.dot)} />
-      {status ?? '—'}
+    <div className="flex flex-col gap-0.5 items-start">
+      <span className={clsx('inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ring-1', cfg.bg)}>
+        <span className={clsx('w-1.5 h-1.5 rounded-full flex-shrink-0', cfg.dot)} />
+        {status ?? '—'}
+      </span>
+      {age && <span className="text-[10px] text-gray-400 ml-1">{age}</span>}
+    </div>
+  )
+}
+
+function AuthMethodBadge({ authMethod }: { authMethod?: string | null }) {
+  if (!authMethod) return <span className="text-sm text-gray-300">—</span>
+  const isGoogle = authMethod.toLowerCase() === 'google'
+  return (
+    <span className={clsx('px-1.5 py-0.5 text-[10px] font-bold rounded-full ring-1', isGoogle ? 'bg-red-50 text-red-700 ring-red-200' : 'bg-sky-50 text-sky-700 ring-sky-200')}>
+      {authMethod}
     </span>
   )
 }
@@ -149,8 +182,13 @@ export default function SessionTable({ orgId, showOrgColumn }: { orgId: string; 
                   >
                     <td className="px-4 py-3 border-b border-gray-100 whitespace-nowrap text-sm text-gray-500">{s.portalSessionId}</td>
                     {showOrgColumn && <td className="px-4 py-3 border-b border-gray-100 whitespace-nowrap text-sm text-gray-600">{s.orgId ?? '—'}</td>}
-                    <td className="px-4 py-3 border-b border-gray-100 whitespace-nowrap text-sm font-semibold text-gray-900">{s.portalPageCode ?? '—'}</td>
-                    <td className="px-4 py-3 border-b border-gray-100 whitespace-nowrap"><StatusBadge status={s.status} /></td>
+                    <td className="px-4 py-3 border-b border-gray-100 whitespace-nowrap">
+                      <div className="flex flex-col gap-1 items-start">
+                        <span className="text-sm font-semibold text-gray-900">{s.portalPageCode ?? '—'}</span>
+                        <AuthMethodBadge authMethod={s.authMethod} />
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 border-b border-gray-100 whitespace-nowrap"><StatusBadge status={s.status} createdDate={s.createdDate} /></td>
                     <td className="px-4 py-3 border-b border-gray-100 whitespace-nowrap text-sm text-gray-500">{formatDate(s.createdDate)}</td>
                     <td className="px-4 py-3 border-b border-gray-100 text-center" onClick={e => e.stopPropagation()}>
                       <button onClick={() => setSelected(s)} className="p-1.5 rounded-lg text-gray-400 hover:text-primary-600 hover:bg-gray-100 transition-colors">

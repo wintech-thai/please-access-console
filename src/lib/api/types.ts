@@ -59,6 +59,7 @@ export interface TenantItem {
   phone?: string | null
   status?: string | null
   orgCreatedDate?: string | null
+  portalPageCount?: number | null
 }
 
 export interface GetTenantsPayload {
@@ -243,6 +244,8 @@ export interface PortalPageItem {
   isEnabled?: boolean | null
   apiKeyId?: string | null
   apiCode?: string | null
+  realmId?: string | null
+  realmName?: string | null
   createdDate?: string | null
 }
 
@@ -258,6 +261,7 @@ export interface AddPortalPagePayload {
   Code: string
   AuthMethod?: string
   Theme?: string
+  RealmId?: string | null
   IsDefault?: boolean
   IsEnabled?: boolean
 }
@@ -266,12 +270,14 @@ export interface UpdatePortalPagePayload {
   Code: string
   AuthMethod?: string
   Theme?: string
+  RealmId?: string | null
 }
 
 export interface PortalSessionItem {
   portalSessionId: string
   orgId?: string | null
   portalPageCode?: string | null
+  authMethod?: string | null
   parametersJson?: string | null
   status?: string | null
   statusDesc?: string | null
@@ -285,4 +291,63 @@ export interface GetPortalSessionsPayload {
   FullTextSearch?: string
   Status?: string
   PortalPageCode?: string
+}
+
+// ─── Portal Realm ────────────────────────────────────────────────────────────
+
+export interface RealmItem {
+  realmId: string
+  orgId?: string | null
+  realmName?: string | null
+  authType?: string | null // 'Native' | 'Google'
+  portalPageCount?: number | null
+  realmUserCount?: number | null
+  createdDate?: string | null
+}
+
+export interface GetRealmsPayload {
+  Offset?: number
+  Limit?: number
+  FullTextSearch?: string
+  AuthType?: string
+}
+
+export interface AddRealmPayload {
+  RealmName: string
+  AuthType: string
+}
+
+export interface UpdateRealmPayload {
+  RealmName: string
+}
+
+export interface RealmUserItem {
+  realmUserId: string
+  orgId?: string | null
+  realmId?: string | null
+  userName?: string | null
+  firstName?: string | null
+  lastName?: string | null
+  email?: string | null
+  isEnabled?: boolean | null
+  createdDate?: string | null
+  lastSeenDate?: string | null
+}
+
+export interface GetRealmUsersPayload {
+  Offset?: number
+  Limit?: number
+  FullTextSearch?: string
+}
+
+export interface AddRealmUserPayload {
+  UserName: string
+  FirstName?: string
+  LastName?: string
+  Email?: string
+  Password: string
+}
+
+export interface ResetRealmUserPasswordPayload {
+  Password: string
 }

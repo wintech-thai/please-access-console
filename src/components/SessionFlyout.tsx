@@ -56,6 +56,7 @@ export default function SessionFlyout({ session, showOrg, onClose }: { session: 
     ['Session ID', session.portalSessionId],
     ...(showOrg ? [['OrgId', session.orgId] as [string, unknown]] : []),
     ['PortalPageCode', session.portalPageCode],
+    ['AuthMethod', session.authMethod],
     ['Status', session.status],
     ['StatusDesc', session.statusDesc],
     ['CreatedDate', session.createdDate],

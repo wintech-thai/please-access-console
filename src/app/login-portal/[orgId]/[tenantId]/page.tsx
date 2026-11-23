@@ -31,6 +31,9 @@ const COPY: Record<Lang, Record<string, string>> = {
     unableToConnect: 'ไม่สามารถเชื่อมต่อได้ กรุณาลองใหม่อีกครั้ง',
     invalidLink: 'ลิงก์เข้าสู่ระบบ WiFi นี้ไม่ถูกต้อง',
     usernameRequired: 'กรุณากรอกชื่อผู้ใช้และรหัสผ่าน',
+    errInvalidCredentials: 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง',
+    errUserDisabled: 'บัญชีผู้ใช้นี้ถูกปิดใช้งาน',
+    errNoRealmConfigured: 'Portal page นี้ยังไม่ได้ตั้งค่า Realm สำหรับเข้าสู่ระบบ',
   },
   English: {
     wifiPortalBadge: 'WiFi Portal',
@@ -49,7 +52,17 @@ const COPY: Record<Lang, Record<string, string>> = {
     unableToConnect: 'Unable to connect. Please try again.',
     invalidLink: 'This WiFi login link is not valid.',
     usernameRequired: 'Please enter your username and password',
+    errInvalidCredentials: 'Username or password is incorrect',
+    errUserDisabled: 'This user is disabled',
+    errNoRealmConfigured: 'Portal page or realm not configured for this session',
   },
+}
+
+//map error status code จาก backend -> key ของ COPY เอาไว้แปลตามภาษาของ portal page เอง backend ส่งมาเป็น description ภาษาอังกฤษตายตัว
+const LOGIN_ERROR_COPY_KEY: Record<string, keyof typeof COPY.Thai> = {
+  INVALID_CREDENTIALS: 'errInvalidCredentials',
+  USER_DISABLED: 'errUserDisabled',
+  ERROR_NO_REALM_CONFIGURED: 'errNoRealmConfigured',
 }
 
 //คำอธิบาย HTTP status สั้นๆ แปะไว้ใน error detail กันคนลืมว่า status นี้คืออะไร
@@ -153,7 +166,8 @@ function LoginPortalContent() {
           if (redirectUrl) window.location.href = redirectUrl
         }, 1500)
       } else {
-        setLoginError(data?.description || c.invalidLink)
+        const copyKey = data?.status ? LOGIN_ERROR_COPY_KEY[data.status] : undefined
+        setLoginError(copyKey ? c[copyKey] : (data?.description || c.invalidLink))
       }
     } catch (err: unknown) {
       setLoginError(err instanceof Error ? err.message : c.unableToConnect)

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, Suspense } from 'react'
 import { useRouter, useParams } from 'next/navigation'
+import Link from 'next/link'
 import { portalRealmApi } from '@/lib/api/portal-realm.api'
 import { tenantApi } from '@/lib/api/tenant.api'
 import type { RealmUserItem, RealmItem, TenantItem } from '@/lib/api/types'
@@ -150,67 +151,6 @@ function AddUserModal({ onClose, onSubmit, saving }: { onClose: () => void; onSu
   )
 }
 
-function EditUserModal({ user, onClose, onSubmit, saving }: { user: RealmUserItem; onClose: () => void; onSubmit: (data: { FirstName?: string; LastName?: string; Email?: string }) => void; saving: boolean }) {
-  const { t } = useLang()
-  const ru = t.realmUser
-  const [firstName, setFirstName] = useState(user.firstName ?? '')
-  const [lastName, setLastName] = useState(user.lastName ?? '')
-  const [email, setEmail] = useState(user.email ?? '')
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    const fn = firstName.trim() || undefined
-    const ln = lastName.trim() || undefined
-    const em = email.trim() || undefined
-    //ไม่มีอะไรเปลี่ยนจริง ไม่ต้องยิง API หรือขึ้น toast แค่ปิด modal เฉยๆ
-    const unchanged = fn === (user.firstName ?? undefined) && ln === (user.lastName ?? undefined) && em === (user.email ?? undefined)
-    if (unchanged) {
-      onClose()
-      return
-    }
-    onSubmit({ FirstName: fn, LastName: ln, Email: em })
-  }
-
-  return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={onClose}>
-      <div className="w-full max-w-lg bg-white rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}>
-        <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between flex-none">
-          <h3 className="text-base font-bold text-gray-900">{ru.editModalTitle}</h3>
-          <button onClick={onClose} className="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors">
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-        <form onSubmit={handleSubmit} className="px-6 py-5 flex flex-col gap-4 overflow-y-auto">
-          <div>
-            <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wide mb-1.5">{ru.fieldUsername}</label>
-            <div className={clsx(inputCls, 'bg-gray-50 text-gray-500 cursor-not-allowed')}>{user.userName}</div>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wide mb-1.5">{ru.fieldFirstName}</label>
-              <input value={firstName} onChange={e => setFirstName(e.target.value)} className={inputCls} autoFocus />
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wide mb-1.5">{ru.fieldLastName}</label>
-              <input value={lastName} onChange={e => setLastName(e.target.value)} className={inputCls} />
-            </div>
-          </div>
-          <div>
-            <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wide mb-1.5">{ru.fieldEmail}</label>
-            <input type="email" value={email} onChange={e => setEmail(e.target.value)} className={inputCls} />
-          </div>
-          <div className="flex justify-end gap-3 mt-2">
-            <button type="button" onClick={onClose} className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">{t.admin.cancel}</button>
-            <button type="submit" disabled={saving} className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-primary-600 hover:bg-primary-700 disabled:opacity-60 rounded-lg transition-colors">
-              {saving && <Spinner />}{t.admin.save}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  )
-}
-
 function ResetPasswordModal({ username, onClose, onSubmit, saving }: { username: string; onClose: () => void; onSubmit: (password: string) => void; saving: boolean }) {
   const { t } = useLang()
   const ru = t.realmUser
@@ -294,8 +234,6 @@ function RealmUsersContent() {
 
   const [addModalOpen, setAddModalOpen] = useState(false)
   const [addSaving, setAddSaving] = useState(false)
-  const [editModal, setEditModal] = useState<RealmUserItem | null>(null)
-  const [editSaving, setEditSaving] = useState(false)
   const [resetModal, setResetModal] = useState<RealmUserItem | null>(null)
   const [resetSaving, setResetSaving] = useState(false)
   const [confirm, setConfirm] = useState<{ title: string; desc?: string; danger?: boolean; onConfirm: () => void } | null>(null)
@@ -372,21 +310,6 @@ function RealmUsersContent() {
       toast.error(err instanceof Error ? err.message : ru.failedToAdd)
     } finally {
       setAddSaving(false)
-    }
-  }
-
-  const handleEditUser = async (data: { FirstName?: string; LastName?: string; Email?: string }) => {
-    if (!tenant?.orgCustomId || !editModal) return
-    setEditSaving(true)
-    try {
-      await portalRealmApi.updateRealmUserById(tenant.orgCustomId, editModal.realmUserId, data)
-      toast.success(ru.editSuccess)
-      setEditModal(null)
-      loadUsers(tenant.orgCustomId)
-    } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : ru.failedToEdit)
-    } finally {
-      setEditSaving(false)
     }
   }
 
@@ -480,7 +403,6 @@ function RealmUsersContent() {
         />
       )}
       {addModalOpen && <AddUserModal onClose={() => setAddModalOpen(false)} onSubmit={handleAddUser} saving={addSaving} />}
-      {editModal && <EditUserModal user={editModal} onClose={() => setEditModal(null)} onSubmit={handleEditUser} saving={editSaving} />}
       {resetModal && (
         <ResetPasswordModal
           username={resetModal.userName ?? ''}
@@ -586,13 +508,12 @@ function RealmUsersContent() {
                           />
                         </td>
                         <td className="px-4 py-3 border-b border-gray-100 whitespace-nowrap text-sm" onClick={e => e.stopPropagation()}>
-                          <button
-                            type="button"
-                            onClick={() => setEditModal(row)}
+                          <Link
+                            href={`/business-setup/tenant/${id}/realms/${realmId}/users/${row.realmUserId}/update`}
                             className="font-semibold text-primary-600 hover:text-primary-700 hover:underline"
                           >
                             {row.userName ?? '—'}
-                          </button>
+                          </Link>
                         </td>
                         <td className="px-4 py-3 border-b border-gray-100 whitespace-nowrap text-sm text-gray-600">{fullName || '—'}</td>
                         <td className="px-4 py-3 border-b border-gray-100 whitespace-nowrap text-sm text-gray-600">{row.email ?? '—'}</td>

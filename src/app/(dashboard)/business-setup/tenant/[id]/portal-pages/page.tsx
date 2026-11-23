@@ -1,11 +1,11 @@
 'use client'
 
 import { useState, useEffect, useCallback, Suspense } from 'react'
+import Link from 'next/link'
 import { useRouter, useParams } from 'next/navigation'
 import { tenantApi } from '@/lib/api/tenant.api'
 import { portalPageApi } from '@/lib/api/portal-page.api'
-import { portalRealmApi } from '@/lib/api/portal-realm.api'
-import type { TenantItem, PortalPageItem, RealmItem } from '@/lib/api/types'
+import type { TenantItem, PortalPageItem } from '@/lib/api/types'
 import { toast } from 'sonner'
 import { ChevronLeft, ChevronRight, Plus, Copy, Check, Ban, CheckCircle, Link2, Star, X, ExternalLink } from 'lucide-react'
 import clsx from 'clsx'
@@ -98,123 +98,6 @@ function PortalUrlModal({ link, loading, onClose }: { link?: string; loading?: b
   )
 }
 
-function PortalPageFormModal({ initial, orgId, onClose, onSubmit, saving }: {
-  initial?: Partial<PortalPageItem>
-  orgId?: string
-  onClose: () => void
-  onSubmit: (data: { Code: string; AuthMethod: string; Theme: string; RealmId: string | null; IsDefault: boolean; IsEnabled: boolean }) => void
-  saving: boolean
-}) {
-  const { t } = useLang()
-  const tp = t.portalPage
-  const isEdit = !!initial?.portalPageId
-  const [code, setCode] = useState(initial?.code ?? '')
-  const [authMethod, setAuthMethod] = useState(initial?.authMethod ?? 'Native')
-  const [theme, setTheme] = useState(initial?.theme ?? 'Default')
-  const [realmId, setRealmId] = useState(initial?.realmId ?? '')
-  const [isDefault, setIsDefault] = useState(initial?.isDefault ?? false)
-  const [isEnabled, setIsEnabled] = useState(initial?.isEnabled ?? true)
-  const [error, setError] = useState('')
-  const [realms, setRealms] = useState<RealmItem[]>([])
-  const [realmsLoaded, setRealmsLoaded] = useState(false)
-
-  useEffect(() => {
-    if (!orgId) return
-    portalRealmApi.getRealms(orgId, {}).then(res => {
-      setRealms(Array.isArray(res.data) ? res.data : [])
-    }).catch(() => setRealms([]))
-      .finally(() => setRealmsLoaded(true))
-  }, [orgId])
-
-  const matchingRealms = realms.filter(r => (r.authType ?? '').toLowerCase() === authMethod.toLowerCase())
-
-  //เปลี่ยน auth method แล้ว realm เดิมที่เลือกไว้ auth type ไม่ตรงกันแล้ว ต้องเคลียร์ทิ้ง
-  //รอ realmsLoaded ก่อน ไม่งั้น realms ที่ยังโหลดไม่เสร็จ (เป็น [] ชั่วคราว) จะทำให้เคลียร์ realmId เดิมทิ้งผิดๆ ตอนเปิดหน้า edit
-  useEffect(() => {
-    if (!realmsLoaded) return
-    if (realmId && !matchingRealms.some(r => r.realmId === realmId)) setRealmId('')
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [authMethod, realms, realmsLoaded])
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    const trimmed = code.trim()
-    if (!trimmed) { setError(tp.codeRequired); return }
-    if (!/^[a-zA-Z0-9-]+$/.test(trimmed)) { setError(tp.codeInvalid); return }
-    onSubmit({ Code: trimmed, AuthMethod: authMethod, Theme: theme, RealmId: realmId || null, IsDefault: isDefault, IsEnabled: isEnabled })
-  }
-
-  return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={onClose}>
-      <div className="w-full max-w-2xl bg-white rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}>
-        <div className="px-6 py-5 border-b border-gray-100 flex-none">
-          <h3 className="text-base font-bold text-gray-900">{isEdit ? tp.editTitle : tp.createTitle}</h3>
-        </div>
-        <form onSubmit={handleSubmit} className="px-6 py-5 flex flex-col gap-4 overflow-y-auto">
-          <div>
-            <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wide mb-1.5">
-              {tp.fieldCode} <span className="text-red-500">*</span>
-            </label>
-            <input
-              value={code}
-              onChange={e => { setCode(e.target.value); setError('') }}
-              placeholder={tp.fieldCodePlaceholder}
-              className={clsx('w-full px-3 py-2.5 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:border-transparent', error ? 'border-red-400 focus:ring-red-400' : 'border-gray-200 focus:ring-primary-500')}
-              autoFocus
-            />
-            {error ? <p className="text-red-500 text-xs mt-1">{error}</p> : <p className="text-xs text-gray-400 mt-1">{tp.fieldCodeHint}</p>}
-          </div>
-          <div className="grid grid-cols-3 gap-4">
-            <div>
-              <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wide mb-1.5">{tp.fieldAuthMethod}</label>
-              <select value={authMethod} onChange={e => setAuthMethod(e.target.value)} className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
-                <option value="Native">Native</option>
-                <option value="Google">Google</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wide mb-1.5">{tp.fieldTheme}</label>
-              <select value={theme} onChange={e => setTheme(e.target.value)} className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
-                <option value="Default">Default</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wide mb-1.5">{tp.fieldRealm}</label>
-              <select value={realmId} onChange={e => setRealmId(e.target.value)} className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
-                <option value="">{tp.noRealmOption}</option>
-                {!realmsLoaded && realmId && initial?.realmName ? (
-                  //ยังโหลด realms ไม่เสร็จ แสดงชื่อ realm เดิมที่ผูกไว้ก่อน กัน select โชว์ตัวเลือกผิดวูบแรกก่อนข้อมูลจริงมาถึง
-                  <option value={realmId}>{initial.realmName}</option>
-                ) : (
-                  matchingRealms.map(r => <option key={r.realmId} value={r.realmId}>{r.realmName}</option>)
-                )}
-              </select>
-              {realmsLoaded && matchingRealms.length === 0 && <p className="text-xs text-gray-400 mt-1">{tp.noRealmMatchAuthType}</p>}
-            </div>
-          </div>
-          <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
-            <input type="checkbox" checked={isDefault} onChange={e => setIsDefault(e.target.checked)} className="rounded border-gray-300 text-primary-600 focus:ring-primary-500 w-4 h-4" />
-            {tp.fieldIsDefault}
-          </label>
-          <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
-            <input type="checkbox" checked={isEnabled} onChange={e => setIsEnabled(e.target.checked)} className="rounded border-gray-300 text-primary-600 focus:ring-primary-500 w-4 h-4" />
-            {tp.fieldIsEnabled}
-          </label>
-          <div className="flex justify-end gap-3 mt-2">
-            <button type="button" onClick={onClose} className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-              {t.admin.cancel}
-            </button>
-            <button type="submit" disabled={saving} className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-primary-600 hover:bg-primary-700 disabled:opacity-60 rounded-lg transition-colors">
-              {saving && <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>}
-              {t.admin.save}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  )
-}
-
 function PortalPagesContent() {
   const { t } = useLang()
   const tp = t.portalPage
@@ -234,8 +117,6 @@ function PortalPagesContent() {
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null)
   const [selectedIds, setSelectedIds] = useState<string[]>([])
 
-  const [formModal, setFormModal] = useState<{ open: boolean; initial?: PortalPageItem }>({ open: false })
-  const [saving, setSaving] = useState(false)
   const [urlModal, setUrlModal] = useState<{ open: boolean; link?: string; loading?: boolean }>({ open: false })
   const [confirm, setConfirm] = useState<{ title: string; desc?: string; onConfirm: () => void } | null>(null)
 
@@ -331,34 +212,6 @@ function PortalPagesContent() {
     })
   }
 
-  const handleFormSubmit = async (data: { Code: string; AuthMethod: string; Theme: string; RealmId: string | null; IsDefault: boolean; IsEnabled: boolean }) => {
-    if (!tenant?.orgCustomId) return
-    setSaving(true)
-    try {
-      const editing = formModal.initial
-      if (editing) {
-        await portalPageApi.updatePortalPageById(tenant.orgCustomId, editing.portalPageId, { Code: data.Code, AuthMethod: data.AuthMethod, Theme: data.Theme, RealmId: data.RealmId })
-        if (data.IsDefault && !editing.isDefault) await portalPageApi.setDefaultPortalPageById(tenant.orgCustomId, editing.portalPageId)
-        if (data.IsEnabled !== editing.isEnabled) {
-          if (data.IsEnabled) await portalPageApi.enablePortalPageById(tenant.orgCustomId, editing.portalPageId)
-          else await portalPageApi.disablePortalPageById(tenant.orgCustomId, editing.portalPageId)
-        }
-        toast.success(tp.updateSuccess)
-      } else {
-        const res = await portalPageApi.addPortalPage(tenant.orgCustomId, data)
-        const newId = res.data?.portalPage?.portalPageId
-        if (data.IsDefault && newId) await portalPageApi.setDefaultPortalPageById(tenant.orgCustomId, newId)
-        toast.success(tp.createSuccess)
-      }
-      setFormModal({ open: false })
-      loadData()
-    } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : (formModal.initial ? tp.failedToUpdate : tp.failedToCreate))
-    } finally {
-      setSaving(false)
-    }
-  }
-
   const handleGetPortalUrl = async (page: PortalPageItem) => {
     if (!tenant?.orgCustomId) return
     setUrlModal({ open: true, loading: true })
@@ -418,16 +271,6 @@ function PortalPagesContent() {
         <PortalUrlModal link={urlModal.link} loading={urlModal.loading} onClose={() => setUrlModal({ open: false })} />
       )}
 
-      {formModal.open && (
-        <PortalPageFormModal
-          initial={formModal.initial}
-          orgId={tenant?.orgCustomId}
-          saving={saving}
-          onClose={() => setFormModal({ open: false })}
-          onSubmit={handleFormSubmit}
-        />
-      )}
-
       <div className="flex-none flex items-center gap-3 mb-6">
         <button onClick={() => router.push('/business-setup/tenant')} className="p-2 rounded-lg text-gray-500 hover:bg-gray-200 transition-colors">
           <ChevronLeft className="w-5 h-5" />
@@ -454,12 +297,12 @@ function PortalPagesContent() {
             </button>
           </div>
           <div className="flex gap-2 w-full sm:w-auto justify-end">
-            <button
-              onClick={() => setFormModal({ open: true })}
+            <Link
+              href={`/business-setup/tenant/${id}/portal-pages/create`}
               className="flex items-center gap-2 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-lg transition-colors"
             >
               <Plus className="w-4 h-4" />{tp.addPortalPage}
-            </button>
+            </Link>
             <button
               onClick={handleBulkDelete}
               disabled={selectedIds.length === 0}
@@ -519,12 +362,12 @@ function PortalPagesContent() {
                           />
                         </td>
                         <td className="px-4 py-3 border-b border-gray-100 whitespace-nowrap text-sm" onClick={e => e.stopPropagation()}>
-                          <button
-                            onClick={() => setFormModal({ open: true, initial: row })}
+                          <Link
+                            href={`/business-setup/tenant/${id}/portal-pages/${row.portalPageId}/update`}
                             className="font-semibold text-primary-600 hover:text-primary-700 hover:underline"
                           >
                             {row.code ?? '—'}
-                          </button>
+                          </Link>
                         </td>
                         <td className="px-4 py-3 border-b border-gray-100 whitespace-nowrap text-sm text-gray-600">{row.authMethod ?? '—'}</td>
                         <td className="px-4 py-3 border-b border-gray-100 whitespace-nowrap text-sm text-gray-600">{row.realmName ?? '—'}</td>

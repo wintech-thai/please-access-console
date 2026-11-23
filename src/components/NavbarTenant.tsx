@@ -18,6 +18,8 @@ import { useBrand } from '@/context/BrandContext'
 const BUSINESS_SUB_ITEMS = [
   { key: 'generalInfo', href: '/business/company-profile', labelKey: 'generalInfo' as const },
   { key: 'session', href: '/business/session', labelKey: 'session' as const },
+  { key: 'realm', href: '/business/realms', labelKey: 'realm' as const },
+  { key: 'portalPage', href: '/business/portal-pages', labelKey: 'portalPage' as const },
 ]
 
 export default function NavbarTenant() {

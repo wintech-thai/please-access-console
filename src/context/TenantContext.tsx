@@ -67,6 +67,8 @@ export function TenantProvider({ children }: { children: ReactNode }) {
     const orgKey = org.orgCustomId || org.orgId || ''
     localStorage.setItem('selectedTenantOrgId', orgKey)
     localStorage.setItem('orgId', orgKey)
+    //แจ้งหน้าที่ fetch ข้อมูลตาม orgId จาก localStorage เอง (เช่น administrator/*) ให้โหลดใหม่ทันที ไม่งั้นต้องกด refresh เองถึงจะเห็นข้อมูลของ tenant ใหม่
+    window.dispatchEvent(new CustomEvent('orgchange', { detail: { orgId: orgKey } }))
   }, [])
 
   return (

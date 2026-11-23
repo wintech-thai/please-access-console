@@ -182,9 +182,14 @@ function PortalPageFormModal({ initial, orgId, onClose, onSubmit, saving }: {
               <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wide mb-1.5">{tp.fieldRealm}</label>
               <select value={realmId} onChange={e => setRealmId(e.target.value)} className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
                 <option value="">{tp.noRealmOption}</option>
-                {matchingRealms.map(r => <option key={r.realmId} value={r.realmId}>{r.realmName}</option>)}
+                {!realmsLoaded && realmId && initial?.realmName ? (
+                  //ยังโหลด realms ไม่เสร็จ แสดงชื่อ realm เดิมที่ผูกไว้ก่อน กัน select โชว์ตัวเลือกผิดวูบแรกก่อนข้อมูลจริงมาถึง
+                  <option value={realmId}>{initial.realmName}</option>
+                ) : (
+                  matchingRealms.map(r => <option key={r.realmId} value={r.realmId}>{r.realmName}</option>)
+                )}
               </select>
-              {matchingRealms.length === 0 && <p className="text-xs text-gray-400 mt-1">{tp.noRealmMatchAuthType}</p>}
+              {realmsLoaded && matchingRealms.length === 0 && <p className="text-xs text-gray-400 mt-1">{tp.noRealmMatchAuthType}</p>}
             </div>
           </div>
           <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">

@@ -2,11 +2,28 @@
 
 import { useEffect, useState, Suspense } from 'react'
 import { useParams, useSearchParams } from 'next/navigation'
-import { Wifi, AlertCircle, Loader2, Eye, EyeOff } from 'lucide-react'
+import { Wifi, AlertCircle, Loader2, Eye, EyeOff, ChevronDown, ChevronUp } from 'lucide-react'
 
 interface PortalInfo {
   code?: string | null
   theme?: string | null
+}
+
+//คำอธิบาย HTTP status สั้นๆ แปะไว้ใน error detail กันคนลืมว่า status นี้คืออะไร
+function describeHttpStatus(status: number): string {
+  const map: Record<number, string> = {
+    400: 'Bad Request – the request was malformed or missing required data',
+    401: 'Unauthorized – authentication failed or is missing',
+    403: 'Forbidden – authenticated but not permitted to call this API',
+    404: 'Not Found – the resource (portal page / session) does not exist',
+    409: 'Conflict – the request conflicts with the current state',
+    429: 'Too Many Requests – rate limited',
+    500: 'Internal Server Error – unhandled exception on the server',
+    502: 'Bad Gateway – upstream server returned an invalid response',
+    503: 'Service Unavailable – server is temporarily overloaded or down',
+    504: 'Gateway Timeout – upstream server took too long to respond',
+  }
+  return map[status] ?? 'Unknown status'
 }
 
 function LoginPortalContent() {
@@ -17,6 +34,8 @@ function LoginPortalContent() {
 
   const [loading, setLoading] = useState(true)
   const [errorMsg, setErrorMsg] = useState('')
+  const [errorDetail, setErrorDetail] = useState('')
+  const [showErrorDetail, setShowErrorDetail] = useState(false)
   const [portalPage, setPortalPage] = useState<PortalInfo | null>(null)
   const [showPassword, setShowPassword] = useState(false)
 
@@ -32,18 +51,23 @@ function LoginPortalContent() {
     fetch(url, {
       method: 'GET',
       credentials: 'omit',
+      cache: 'no-store', //เป็น GET เดิมซ้ำ querystring เดิมได้บ่อย (ผู้ใช้กดลิงก์เดิมซ้ำ) กัน browser cache ตอบ response เก่าไม่ยอมยิง request ใหม่ไปเช็คสถานะล่าสุดจริง
       headers: key ? { Authorization: `Basic ${btoa(`portal-page:${key}`)}` } : {},
     })
-      .then(res => res.json())
-      .then(data => {
+      .then(async res => {
+        const data = await res.json().catch(() => null)
         const session = data?.portalSession
         if (session?.status === 'Authorized' || session?.status === 'Pending') {
           setPortalPage(data?.portalPage ?? null)
         } else {
           setErrorMsg(session?.statusDesc || data?.description || 'This WiFi login link is not valid.')
+          setErrorDetail(JSON.stringify({ httpStatus: res.status, httpStatusMeaning: describeHttpStatus(res.status), ...data }, null, 2))
         }
       })
-      .catch(() => setErrorMsg('Unable to connect. Please try again.'))
+      .catch((err: unknown) => {
+        setErrorMsg('Unable to connect. Please try again.')
+        setErrorDetail(err instanceof Error ? err.message : String(err))
+      })
       .finally(() => setLoading(false))
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orgId, tenantId])
@@ -96,6 +120,23 @@ function LoginPortalContent() {
                   <AlertCircle className="w-6 h-6 text-rose-400" />
                 </div>
                 <p className="text-rose-300 font-medium text-sm">{errorMsg}</p>
+                {errorDetail && (
+                  <div className="w-full mt-4">
+                    <button
+                      type="button"
+                      onClick={() => setShowErrorDetail(v => !v)}
+                      className="flex items-center gap-1 mx-auto text-xs text-slate-500 hover:text-slate-300 transition-colors"
+                    >
+                      {showErrorDetail ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                      {showErrorDetail ? 'Hide details' : 'Show details'}
+                    </button>
+                    {showErrorDetail && (
+                      <pre className="mt-2 w-full max-h-40 overflow-auto text-left text-[10px] leading-relaxed text-slate-400 bg-slate-900/80 border border-slate-700/60 rounded-lg p-3 whitespace-pre-wrap break-all">
+                        {errorDetail}
+                      </pre>
+                    )}
+                  </div>
+                )}
               </div>
             ) : (
               <form onSubmit={e => e.preventDefault()} className="flex flex-col gap-4">

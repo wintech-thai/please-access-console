@@ -584,6 +584,11 @@ export const translations = {
       errConfirmMismatch: 'รหัสผ่านไม่ตรงกัน',
       addSuccess: 'เพิ่มผู้ใช้งานสำเร็จ',
       failedToAdd: 'เพิ่มผู้ใช้งานไม่สำเร็จ',
+      underTenant: 'ภายใต้ tenant',
+      editModalTitle: 'แก้ไขข้อมูลผู้ใช้',
+      editSuccess: 'บันทึกข้อมูลผู้ใช้แล้ว',
+      failedToEdit: 'บันทึกข้อมูลผู้ใช้ไม่สำเร็จ',
+      editUser: 'แก้ไขข้อมูล',
     },
     session: {
       title: 'Session',
@@ -1295,6 +1300,11 @@ export const translations = {
       errConfirmMismatch: 'Passwords do not match',
       addSuccess: 'User added successfully',
       failedToAdd: 'Failed to add user',
+      underTenant: 'under tenant',
+      editModalTitle: 'Edit User',
+      editSuccess: 'User updated successfully',
+      failedToEdit: 'Failed to update user',
+      editUser: 'Edit',
     },
     session: {
       title: 'Session',

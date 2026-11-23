@@ -298,7 +298,16 @@ function RealmsContent() {
                         </td>
                         <td className="px-4 py-3 border-b border-gray-100 whitespace-nowrap"><AuthTypeBadge authType={row.authType} /></td>
                         <td className="px-4 py-3 border-b border-gray-100 whitespace-nowrap text-sm text-gray-600 text-center">{row.portalPageCount ?? 0}</td>
-                        <td className="px-4 py-3 border-b border-gray-100 whitespace-nowrap text-sm text-gray-600 text-center">{isNative ? (row.realmUserCount ?? 0) : '—'}</td>
+                        <td className="px-4 py-3 border-b border-gray-100 whitespace-nowrap text-sm text-gray-600 text-center" onClick={e => e.stopPropagation()}>
+                          {isNative ? (
+                            <Link
+                              href={`/business-setup/tenant/${id}/realms/${row.realmId}/users`}
+                              className="font-semibold text-primary-600 hover:text-primary-700 hover:underline"
+                            >
+                              {row.realmUserCount ?? 0}
+                            </Link>
+                          ) : '—'}
+                        </td>
                         <td className="px-4 py-3 border-b border-gray-100 whitespace-nowrap text-sm text-gray-500">{formatDate(row.createdDate)}</td>
                         <td className="px-4 py-3 border-b border-gray-100 whitespace-nowrap text-center" onClick={e => e.stopPropagation()}>
                           <RowActionsMenu items={[

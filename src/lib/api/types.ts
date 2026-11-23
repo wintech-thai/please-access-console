@@ -348,6 +348,12 @@ export interface AddRealmUserPayload {
   Password: string
 }
 
+export interface UpdateRealmUserPayload {
+  FirstName?: string
+  LastName?: string
+  Email?: string
+}
+
 export interface ResetRealmUserPasswordPayload {
   Password: string
 }

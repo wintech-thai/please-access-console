@@ -1,5 +1,5 @@
 import { client } from '@/lib/axios'
-import type { RealmItem, GetRealmsPayload, AddRealmPayload, UpdateRealmPayload, RealmUserItem, GetRealmUsersPayload, AddRealmUserPayload, ResetRealmUserPasswordPayload } from './types'
+import type { RealmItem, GetRealmsPayload, AddRealmPayload, UpdateRealmPayload, RealmUserItem, GetRealmUsersPayload, AddRealmUserPayload, UpdateRealmUserPayload, ResetRealmUserPasswordPayload } from './types'
 
 //ใช้จากโปรแกรม Admin เท่านั้น ไม่มี OrgUser token ของ tenant เลยต้องยิง /admin-api (global) แล้วส่ง orgId จริงทาง path แทน
 const BASE = '/admin-api/AdminPortalRealm/org/global/action'
@@ -32,6 +32,9 @@ export const portalRealmApi = {
 
   addRealmUser: (orgId: string, realmId: string, payload: AddRealmUserPayload) =>
     client.post<{ status?: string; description?: string; realmUser?: RealmUserItem }>(`${BASE}/AddRealmUser/${orgId}/${realmId}`, payload),
+
+  updateRealmUserById: (orgId: string, realmUserId: string, payload: UpdateRealmUserPayload) =>
+    client.post<{ status?: string; description?: string; realmUser?: RealmUserItem }>(`${BASE}/UpdateRealmUserById/${orgId}/${realmUserId}`, payload),
 
   resetRealmUserPasswordById: (orgId: string, realmUserId: string, payload: ResetRealmUserPasswordPayload) =>
     client.post(`${BASE}/ResetRealmUserPasswordById/${orgId}/${realmUserId}`, payload),

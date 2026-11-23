@@ -499,7 +499,7 @@ export const translations = {
       editSubtitle: 'แก้ไขการตั้งค่าของ Portal Page นี้',
       fieldLanguage: 'ภาษา',
       languageThai: 'ไทย',
-      languageEnglish: 'English',
+      languageEnglish: 'อังกฤษ',
       fieldRedirectUrl: 'Redirect URL หลัง Login สำเร็จ',
       redirectModeDirect: 'กำหนด URL เอง',
       redirectModeParameter: 'อ่านจาก Parameter',

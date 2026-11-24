@@ -18,6 +18,12 @@ function tenantDomain(): string {
   return window.location.host.replace(/^admin/, 'tenant')
 }
 
+//สุ่ม MAC address ใส่ไปในลิงก์ ให้มีข้อมูลตัวอย่างสำหรับทดสอบ ตัวแรกเป็น "XX" ตายตัวเพื่อให้รู้ว่าเป็นตัวที่สร้างขึ้นมาเอง ไม่ใช่ MAC จริงจาก Mikrotik
+function generateFakeMac(): string {
+  const bytes = Array.from({ length: 5 }, () => Math.floor(Math.random() * 256).toString(16).padStart(2, '0').toUpperCase())
+  return ['XX', ...bytes].join(':')
+}
+
 function ConfirmDialog({ title, desc, onConfirm, onCancel, cancelLabel, confirmLabel }: {
   title: string; desc?: string; onConfirm: () => void; onCancel: () => void
   cancelLabel: string; confirmLabel: string
@@ -221,7 +227,7 @@ function PortalPagesContent() {
       if (!rawKey) throw new Error(tp.failedToGetUrl)
       const domain = tenantDomain()
       const tenantId = tenant.orgId || tenant.orgCustomId
-      const url = `${window.location.protocol}//${domain}/login-portal/${tenant.orgCustomId}/${tenantId}?key=${encodeURIComponent(rawKey)}&code=${encodeURIComponent(page.code ?? '')}`
+      const url = `${window.location.protocol}//${domain}/login-portal/${tenant.orgCustomId}/${tenantId}?key=${encodeURIComponent(rawKey)}&code=${encodeURIComponent(page.code ?? '')}&mac=${encodeURIComponent(generateFakeMac())}`
       setUrlModal({ open: true, link: url })
       loadData()
     } catch (err: unknown) {

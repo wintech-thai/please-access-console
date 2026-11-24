@@ -2,7 +2,7 @@
 
 import { useEffect, useState, Suspense } from 'react'
 import { useParams, useSearchParams } from 'next/navigation'
-import { Wifi, AlertCircle, Loader2, Eye, EyeOff, ChevronDown, ChevronUp, CheckCircle2 } from 'lucide-react'
+import { Wifi, AlertCircle, Loader2, Eye, EyeOff, ChevronDown, ChevronUp, CheckCircle2, Copy, Check } from 'lucide-react'
 
 interface PortalInfo {
   code?: string | null
@@ -34,6 +34,12 @@ const COPY: Record<Lang, Record<string, string>> = {
     errInvalidCredentials: 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง',
     errUserDisabled: 'บัญชีผู้ใช้นี้ถูกปิดใช้งาน',
     errNoRealmConfigured: 'Portal page นี้ยังไม่ได้ตั้งค่า Realm สำหรับเข้าสู่ระบบ',
+    errPortalPageNotFound: 'ไม่พบ Portal Page นี้',
+    errPortalPageDisabled: 'Portal Page นี้ถูกปิดใช้งานอยู่',
+    errApiKeyMismatch: 'API key ไม่ตรงกับ Portal Page นี้',
+    errMissingMac: 'ไม่พบข้อมูล MAC address จากอุปกรณ์',
+    copyJson: 'คัดลอก',
+    copied: 'คัดลอกแล้ว',
   },
   English: {
     wifiPortalBadge: 'WiFi Portal',
@@ -55,6 +61,12 @@ const COPY: Record<Lang, Record<string, string>> = {
     errInvalidCredentials: 'Username or password is incorrect',
     errUserDisabled: 'This user is disabled',
     errNoRealmConfigured: 'Portal page or realm not configured for this session',
+    errPortalPageNotFound: 'This Portal Page could not be found',
+    errPortalPageDisabled: 'This Portal Page is currently disabled',
+    errApiKeyMismatch: 'API key does not match this Portal Page',
+    errMissingMac: 'No MAC address was received from the device',
+    copyJson: 'Copy',
+    copied: 'Copied',
   },
 }
 
@@ -63,6 +75,21 @@ const LOGIN_ERROR_COPY_KEY: Record<string, keyof typeof COPY.Thai> = {
   INVALID_CREDENTIALS: 'errInvalidCredentials',
   USER_DISABLED: 'errUserDisabled',
   ERROR_NO_REALM_CONFIGURED: 'errNoRealmConfigured',
+}
+
+//map error code จาก statusDesc ของ AddPortalSession (รูปแบบ "CODE - ข้อความ") -> key ของ COPY เพื่อแปลตามภาษาของ portal page
+const SESSION_ERROR_COPY_KEY: Record<string, keyof typeof COPY.Thai> = {
+  ERROR_PORTAL_PAGE_NOT_FOUND: 'errPortalPageNotFound',
+  ERROR_PORTAL_PAGE_DISABLED: 'errPortalPageDisabled',
+  ERROR_API_KEY_NOT_OWN_BY_PORTAL_PAGE: 'errApiKeyMismatch',
+  ERROR_MISSING_MAC: 'errMissingMac',
+}
+
+function translateSessionError(statusDesc: string | undefined | null, fallback: string, lang: Lang): string {
+  const copy = COPY[lang]
+  const code = statusDesc?.match(/^([A-Z_]+) - /)?.[1]
+  const copyKey = code ? SESSION_ERROR_COPY_KEY[code] : undefined
+  return copyKey ? copy[copyKey] : (statusDesc || fallback)
 }
 
 //คำอธิบาย HTTP status สั้นๆ แปะไว้ใน error detail กันคนลืมว่า status นี้คืออะไร
@@ -92,6 +119,7 @@ function LoginPortalContent() {
   const [errorMsg, setErrorMsg] = useState('')
   const [errorDetail, setErrorDetail] = useState('')
   const [showErrorDetail, setShowErrorDetail] = useState(false)
+  const [copiedDetail, setCopiedDetail] = useState(false)
   const [portalPage, setPortalPage] = useState<PortalInfo | null>(null)
   const [portalSessionId, setPortalSessionId] = useState('')
   const [apiKey, setApiKey] = useState('')
@@ -130,7 +158,10 @@ function LoginPortalContent() {
           setPortalPage(data?.portalPage ?? null)
           setPortalSessionId(session?.portalSessionId ?? '')
         } else {
-          setErrorMsg(session?.statusDesc || data?.description || 'This WiFi login link is not valid.')
+          //portalPage state ยังไม่ถูก set ในสายนี้ เลยคำนวณภาษาจาก data ที่เพิ่ง fetch มาตรงๆ แทน ไม่พึ่ง state ที่ยังไม่อัปเดต
+          setPortalPage(data?.portalPage ?? null)
+          const errLang: Lang = data?.portalPage?.language === 'English' ? 'English' : 'Thai'
+          setErrorMsg(translateSessionError(session?.statusDesc, data?.description || COPY[errLang].invalidLink, errLang))
           setErrorDetail(JSON.stringify({ httpStatus: res.status, httpStatusMeaning: describeHttpStatus(res.status), ...data }, null, 2))
         }
       })
@@ -237,9 +268,25 @@ function LoginPortalContent() {
                       {showErrorDetail ? c.hideDetails : c.showDetails}
                     </button>
                     {showErrorDetail && (
-                      <pre className="mt-2 w-full max-h-40 overflow-auto text-left text-[10px] leading-relaxed text-slate-400 bg-slate-900/80 border border-slate-700/60 rounded-lg p-3 whitespace-pre-wrap break-all">
-                        {errorDetail}
-                      </pre>
+                      <div className="mt-2">
+                        <div className="flex justify-end mb-1">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              navigator.clipboard.writeText(errorDetail)
+                              setCopiedDetail(true)
+                              setTimeout(() => setCopiedDetail(false), 2000)
+                            }}
+                            className="flex items-center gap-1 px-2 py-1 text-[10px] font-medium rounded-md bg-slate-800/90 border border-slate-700/60 text-slate-400 hover:text-slate-200 transition-colors"
+                          >
+                            {copiedDetail ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                            {copiedDetail ? c.copied : c.copyJson}
+                          </button>
+                        </div>
+                        <pre className="w-full max-h-40 overflow-auto text-left text-[10px] leading-relaxed text-slate-400 bg-slate-900/80 border border-slate-700/60 rounded-lg p-3 whitespace-pre-wrap break-all">
+                          {errorDetail}
+                        </pre>
+                      </div>
                     )}
                   </div>
                 )}

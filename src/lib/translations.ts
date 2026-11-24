@@ -507,6 +507,9 @@ export const translations = {
       redirectUrlPlaceholderParameter: 'เช่น redirect_url',
       redirectUrlHintDirect: 'ไปที่ URL นี้เสมอหลัง login สำเร็จ',
       redirectUrlHintParameter: 'อ่านค่า URL จาก parameter ชื่อนี้ที่ Mikrotik ส่งมาตอนเปิดหน้า portal',
+      viewTitle: 'รายละเอียด Portal Page',
+      viewSubtitle: 'ดูการตั้งค่าของ Portal Page นี้ (ดูได้อย่างเดียว)',
+      notSet: 'ยังไม่ได้ตั้งค่า',
     },
     realm: {
       title: 'Realm',
@@ -1245,6 +1248,9 @@ export const translations = {
       redirectUrlPlaceholderParameter: 'e.g. redirect_url',
       redirectUrlHintDirect: 'Always redirect to this URL after a successful login',
       redirectUrlHintParameter: 'Read the URL from this parameter name sent by Mikrotik when opening the portal page',
+      viewTitle: 'Portal Page Details',
+      viewSubtitle: "View this Portal Page's settings (view only)",
+      notSet: 'Not set',
     },
     realm: {
       title: 'Realm',

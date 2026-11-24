@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import Link from 'next/link'
 import { portalPageApi } from '@/lib/api/portal-page.api'
 import { useTenant } from '@/context/TenantContext'
 import type { PortalPageItem } from '@/lib/api/types'
@@ -14,6 +15,12 @@ function tenantDomain(): string {
   if (typeof window === 'undefined') return ''
   //ใช้ host (รวม port) แทน hostname เผื่อรัน local dev ที่ไม่มี admin/tenant prefix จริง
   return window.location.host.replace(/^admin/, 'tenant')
+}
+
+//สุ่ม MAC address ใส่ไปในลิงก์ ให้มีข้อมูลตัวอย่างสำหรับทดสอบ ตัวแรกเป็น "XX" ตายตัวเพื่อให้รู้ว่าเป็นตัวที่สร้างขึ้นมาเอง ไม่ใช่ MAC จริงจาก Mikrotik
+function generateFakeMac(): string {
+  const bytes = Array.from({ length: 5 }, () => Math.floor(Math.random() * 256).toString(16).padStart(2, '0').toUpperCase())
+  return ['XX', ...bytes].join(':')
 }
 
 function PortalUrlModal({ link, loading, onClose }: { link?: string; loading?: boolean; onClose: () => void }) {
@@ -124,7 +131,7 @@ export default function TenantPortalPagesTable({ orgId }: { orgId: string }) {
       if (!rawKey) throw new Error(tp.failedToGetUrl)
       const domain = tenantDomain()
       const tenantId = selectedOrg?.orgId || orgId
-      const url = `${window.location.protocol}//${domain}/login-portal/${orgId}/${tenantId}?key=${encodeURIComponent(rawKey)}&code=${encodeURIComponent(row.code ?? '')}`
+      const url = `${window.location.protocol}//${domain}/login-portal/${orgId}/${tenantId}?key=${encodeURIComponent(rawKey)}&code=${encodeURIComponent(row.code ?? '')}&mac=${encodeURIComponent(generateFakeMac())}`
       setUrlModal({ open: true, link: url })
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : tp.failedToGetUrl)
@@ -203,7 +210,11 @@ export default function TenantPortalPagesTable({ orgId }: { orgId: string }) {
                       isSelected ? '!bg-primary-100 border-l-primary-500' : 'border-l-transparent hover:bg-gray-50'
                     )}
                   >
-                    <td className="px-4 py-3 border-b border-gray-100 whitespace-nowrap text-sm font-semibold text-gray-900">{row.code ?? '—'}</td>
+                    <td className="px-4 py-3 border-b border-gray-100 whitespace-nowrap text-sm" onClick={e => e.stopPropagation()}>
+                      <Link href={`/business/portal-pages/${row.portalPageId}`} className="font-semibold text-primary-600 hover:text-primary-700 hover:underline">
+                        {row.code ?? '—'}
+                      </Link>
+                    </td>
                     <td className="px-4 py-3 border-b border-gray-100 whitespace-nowrap text-sm text-gray-600">{row.authMethod ?? '—'}</td>
                     <td className="px-4 py-3 border-b border-gray-100 whitespace-nowrap text-sm text-gray-600">{row.realmName ?? '—'}</td>
                     <td className="px-4 py-3 border-b border-gray-100 whitespace-nowrap text-sm text-gray-600">{row.theme ?? '—'}</td>

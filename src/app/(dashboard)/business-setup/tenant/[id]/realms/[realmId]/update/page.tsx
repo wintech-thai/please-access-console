@@ -3,12 +3,14 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { portalRealmApi } from '@/lib/api/portal-realm.api'
+import type { RealmItem } from '@/lib/api/types'
 import { toast } from 'sonner'
-import { ChevronLeft } from 'lucide-react'
+import { ChevronLeft, Code2 } from 'lucide-react'
 import clsx from 'clsx'
 import { useLang } from '@/context/LanguageContext'
 import { useUnsavedChanges } from '@/hooks/useUnsavedChanges'
 import LeaveConfirmModal from '@/components/LeaveConfirmModal'
+import JsonViewModal from '@/components/JsonViewModal'
 
 export default function RealmUpdatePage() {
   const { t } = useLang()
@@ -24,12 +26,15 @@ export default function RealmUpdatePage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const [realm, setRealm] = useState<RealmItem | null>(null)
+  const [jsonViewOpen, setJsonViewOpen] = useState(false)
 
   const loadData = useCallback(async () => {
     setLoading(true)
     try {
       const res = await portalRealmApi.getRealmById(id, realmId)
       const realm = res.data?.realm
+      setRealm(realm ?? null)
       setRealmName(realm?.realmName ?? '')
       setOriginalName(realm?.realmName ?? '')
       setAuthType(realm?.authType ?? '')
@@ -80,15 +85,26 @@ export default function RealmUpdatePage() {
   return (
     <div className="flex flex-col overflow-hidden h-[calc(100dvh-5rem)] sm:h-[calc(100dvh-6.5rem)]">
       {showConfirm && <LeaveConfirmModal onConfirm={confirmLeave} onCancel={cancelLeave} />}
+      {jsonViewOpen && realm && <JsonViewModal data={realm} onClose={() => setJsonViewOpen(false)} />}
 
-      <div className="flex-none flex items-center gap-3 mb-6">
-        <button onClick={goBack} className="p-2 rounded-lg text-gray-500 hover:bg-gray-200 transition-colors">
-          <ChevronLeft className="w-5 h-5" />
-        </button>
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">{tr.editTitle}</h1>
-          <p className="text-base text-gray-500 mt-0.5">{tr.editSubtitle}</p>
+      <div className="flex-none flex items-center justify-between gap-3 mb-6">
+        <div className="flex items-center gap-3">
+          <button onClick={goBack} className="p-2 rounded-lg text-gray-500 hover:bg-gray-200 transition-colors">
+            <ChevronLeft className="w-5 h-5" />
+          </button>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">{tr.editTitle}</h1>
+            <p className="text-base text-gray-500 mt-0.5">{tr.editSubtitle}</p>
+          </div>
         </div>
+        <button
+          type="button"
+          onClick={() => setJsonViewOpen(true)}
+          title={tr.viewJson}
+          className="p-2 text-gray-500 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 hover:text-gray-700 transition-colors"
+        >
+          <Code2 className="w-4 h-4" />
+        </button>
       </div>
 
       <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0 overflow-hidden">

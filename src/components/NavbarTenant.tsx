@@ -18,6 +18,8 @@ import { useBrand } from '@/context/BrandContext'
 const BUSINESS_SUB_ITEMS = [
   { key: 'generalInfo', href: '/business/company-profile', labelKey: 'generalInfo' as const },
   { key: 'session', href: '/business/session', labelKey: 'session' as const },
+  { key: 'realm', href: '/business/realms', labelKey: 'realm' as const },
+  { key: 'portalPage', href: '/business/portal-pages', labelKey: 'portalPage' as const },
 ]
 
 export default function NavbarTenant() {
@@ -160,15 +162,17 @@ export default function NavbarTenant() {
             </button>
             {businessMenuOpen && (
               <div className="absolute left-0 top-full mt-1.5 w-48 bg-white rounded-xl shadow-xl border border-gray-200 py-1 z-50">
-                {BUSINESS_SUB_ITEMS.map(item => (
-                  <Link
-                    key={item.key}
-                    href={item.href}
-                    onClick={() => setBusinessMenuOpen(false)}
-                    className={clsx('flex items-center gap-2.5 px-4 py-2.5 text-sm transition-colors', pathname.startsWith(item.href) ? 'text-primary-700 font-semibold bg-primary-50' : 'text-gray-700 hover:bg-gray-50 hover:text-primary-600')}
-                  >
-                    {t.nav[item.labelKey]}
-                  </Link>
+                {BUSINESS_SUB_ITEMS.map((item, i) => (
+                  <div key={item.key}>
+                    <Link
+                      href={item.href}
+                      onClick={() => setBusinessMenuOpen(false)}
+                      className={clsx('flex items-center gap-2.5 px-4 py-2.5 text-sm transition-colors', pathname.startsWith(item.href) ? 'text-primary-700 font-semibold bg-primary-50' : 'text-gray-700 hover:bg-gray-50 hover:text-primary-600')}
+                    >
+                      {t.nav[item.labelKey]}
+                    </Link>
+                    {i < 2 && <div className="border-t border-gray-100" />}
+                  </div>
                 ))}
               </div>
             )}
@@ -288,15 +292,17 @@ export default function NavbarTenant() {
           </button>
           {mobileBusinessOpen && (
             <div className="ml-3 border-l border-white/20 pl-3 flex flex-col gap-0.5 mb-1">
-              {BUSINESS_SUB_ITEMS.map(item => (
-                <Link
-                  key={item.key}
-                  href={item.href}
-                  onClick={() => { setMobileMenuOpen(false); setMobileBusinessOpen(false) }}
-                  className={clsx('flex items-center px-3 py-2 rounded-lg text-sm transition-colors', pathname.startsWith(item.href) ? 'bg-white/20 text-white font-semibold' : 'text-white/80 hover:bg-white/10')}
-                >
-                  {t.nav[item.labelKey]}
-                </Link>
+              {BUSINESS_SUB_ITEMS.map((item, i) => (
+                <div key={item.key}>
+                  <Link
+                    href={item.href}
+                    onClick={() => { setMobileMenuOpen(false); setMobileBusinessOpen(false) }}
+                    className={clsx('flex items-center px-3 py-2 rounded-lg text-sm transition-colors', pathname.startsWith(item.href) ? 'bg-white/20 text-white font-semibold' : 'text-white/80 hover:bg-white/10')}
+                  >
+                    {t.nav[item.labelKey]}
+                  </Link>
+                  {i < 2 && <div className="border-t border-white/10" />}
+                </div>
               ))}
             </div>
           )}

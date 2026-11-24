@@ -135,7 +135,7 @@ function TenantListContent() {
   const startRow = total === 0 ? 0 : (page - 1) * itemsPerPage + 1
   const endRow = Math.min(page * itemsPerPage, total)
 
-  const cols = [t.tenant.colCode, t.tenant.colName, t.tenant.colEmail, t.tenant.colPhone, t.tenant.colTags, t.tenant.colPortalPages, t.tenant.colStatus, t.tenant.colAction]
+  const cols = [t.tenant.colCode, t.tenant.colName, t.tenant.colEmail, t.tenant.colPhone, t.tenant.colTags, t.tenant.colPortalPages, t.tenant.colRealm, t.tenant.colStatus, t.tenant.colAction]
 
   return (
     <div className="flex flex-col overflow-hidden h-[calc(100dvh-5rem)] sm:h-[calc(100dvh-6.5rem)]">
@@ -186,7 +186,7 @@ function TenantListContent() {
             <thead className="sticky top-0 z-10">
               <tr className="bg-gray-50">
                 {cols.map((col, i) => (
-                  <th key={col} className={clsx('px-4 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider border-b border-gray-200 whitespace-nowrap', col === t.tenant.colPortalPages || i === cols.length - 1 ? 'text-center' : 'text-left', i === 0 && 'rounded-tl-xl', i === cols.length - 1 && 'rounded-tr-xl')}>{col}</th>
+                  <th key={col} className={clsx('px-4 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider border-b border-gray-200 whitespace-nowrap', col === t.tenant.colPortalPages || col === t.tenant.colRealm || i === cols.length - 1 ? 'text-center' : 'text-left', i === 0 && 'rounded-tl-xl', i === cols.length - 1 && 'rounded-tr-xl')}>{col}</th>
                 ))}
               </tr>
             </thead>
@@ -237,6 +237,15 @@ function TenantListContent() {
                           </Link>
                         ) : (
                           <span className="text-sm text-gray-400">{tenant.portalPageCount ?? 0}</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 border-b border-gray-100 whitespace-nowrap text-center" onClick={e => e.stopPropagation()}>
+                        {(tenant.realmCount ?? 0) > 0 ? (
+                          <Link href={`/business-setup/tenant/${tenant.orgCustomId}/realms`} className="text-sm font-semibold text-primary-600 hover:text-primary-700 hover:underline">
+                            {tenant.realmCount}
+                          </Link>
+                        ) : (
+                          <span className="text-sm text-gray-400">{tenant.realmCount ?? 0}</span>
                         )}
                       </td>
                       <td className="px-4 py-3 border-b border-gray-100 whitespace-nowrap"><StatusBadge status={tenant.status} /></td>

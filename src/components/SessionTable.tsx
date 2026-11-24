@@ -8,6 +8,21 @@ import { portalSessionApi } from '@/lib/api/portal-session.api'
 import type { PortalSessionItem } from '@/lib/api/types'
 import { useLang } from '@/context/LanguageContext'
 import SessionFlyout from '@/components/SessionFlyout'
+import { AdvancedTimeRangeSelector, type TimeRangeValue } from '@/components/AdvancedTimeRangeSelector'
+
+function getTimeFilter(tr: TimeRangeValue): { dateFrom: string; dateTo: string } {
+  if (tr.type === 'absolute' && tr.start && tr.end) {
+    return { dateFrom: new Date(tr.start * 1000).toISOString(), dateTo: new Date(tr.end * 1000).toISOString() }
+  }
+  const num = parseInt(tr.value)
+  const unit = tr.value.replace(/\d/g, '')
+  const now = Date.now()
+  let startMs = now
+  if (unit === 'm') startMs = now - num * 60_000
+  else if (unit === 'h') startMs = now - num * 3_600_000
+  else startMs = now - num * 86_400_000
+  return { dateFrom: new Date(startMs).toISOString(), dateTo: new Date(now).toISOString() }
+}
 
 function formatAge(createdDate?: string | null): string {
   if (!createdDate) return ''
@@ -20,13 +35,24 @@ function formatAge(createdDate?: string | null): string {
   return `${hours}h ${mins}min`
 }
 
-function StatusBadge({ status, createdDate }: { status?: string | null; createdDate?: string | null }) {
+function StatusBadge({ status, createdDate, statusDesc }: { status?: string | null; createdDate?: string | null; statusDesc?: string | null }) {
   const lower = status?.toLowerCase()
   const cfg = lower === 'authorized'
     ? { bg: 'bg-emerald-50 text-emerald-700 ring-emerald-200', dot: 'bg-emerald-500' }
     : lower === 'failed'
       ? { bg: 'bg-red-50 text-red-700 ring-red-200', dot: 'bg-red-500' }
       : { bg: 'bg-amber-50 text-amber-700 ring-amber-200', dot: 'bg-amber-400' }
+  if (lower === 'failed' && statusDesc) {
+    return (
+      <div className="flex flex-col gap-0.5 items-start max-w-[200px]">
+        <span className={clsx('inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ring-1', cfg.bg)}>
+          <span className={clsx('w-1.5 h-1.5 rounded-full flex-shrink-0', cfg.dot)} />
+          {status ?? '—'}
+        </span>
+        <span className="text-[10px] text-gray-400 ml-1 truncate max-w-full" title={statusDesc}>{statusDesc}</span>
+      </div>
+    )
+  }
   if (lower !== 'pending') {
     return (
       <span className={clsx('inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ring-1', cfg.bg)}>
@@ -71,7 +97,10 @@ export default function SessionTable({ orgId, showOrgColumn }: { orgId: string; 
   const [total, setTotal] = useState(0)
   const [selected, setSelected] = useState<PortalSessionItem | null>(null)
   const SS_KEY = `access_session_highlight_${orgId}`
+  const SS_DATE_KEY = `access_session_daterange_${orgId}`
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null)
+  //default ช่วงเวลาค้นหา 30 วันล่าสุด แล้วจำไว้ด้วย sessionStorage เวลาสลับหน้าไปมา
+  const [timeRange, setTimeRange] = useState<TimeRangeValue>({ type: 'relative', value: '30d' })
 
   const selectRow = (rowId: string) => {
     setSelectedRowId(rowId)
@@ -81,8 +110,18 @@ export default function SessionTable({ orgId, showOrgColumn }: { orgId: string; 
   useEffect(() => {
     const saved = sessionStorage.getItem(SS_KEY)
     if (saved) setSelectedRowId(saved)
+    try {
+      const savedRange = sessionStorage.getItem(SS_DATE_KEY)
+      if (savedRange) setTimeRange(JSON.parse(savedRange))
+    } catch { }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  const handleTimeRangeChange = (tr: TimeRangeValue) => {
+    setTimeRange(tr)
+    setPage(1)
+    sessionStorage.setItem(SS_DATE_KEY, JSON.stringify(tr))
+  }
 
   const fetchSessions = useCallback(async (pageOverride?: number, searchOverride?: string) => {
     if (!orgId) return
@@ -90,11 +129,14 @@ export default function SessionTable({ orgId, showOrgColumn }: { orgId: string; 
     const currentSearch = searchOverride ?? appliedSearch
     setLoading(true)
     try {
+      const { dateFrom, dateTo } = getTimeFilter(timeRange)
       const payload = {
         Offset: (currentPage - 1) * itemsPerPage,
         Limit: itemsPerPage,
         FullTextSearch: currentSearch || undefined,
         Status: statusFilter || undefined,
+        DateFrom: dateFrom,
+        DateTo: dateTo,
       }
       const [listRes, countRes] = await Promise.all([
         portalSessionApi.getPortalSessions(orgId, payload),
@@ -109,7 +151,7 @@ export default function SessionTable({ orgId, showOrgColumn }: { orgId: string; 
     } finally {
       setLoading(false)
     }
-  }, [orgId, page, itemsPerPage, appliedSearch, statusFilter])
+  }, [orgId, page, itemsPerPage, appliedSearch, statusFilter, timeRange])
 
   useEffect(() => { fetchSessions() }, [fetchSessions])
 
@@ -130,7 +172,7 @@ export default function SessionTable({ orgId, showOrgColumn }: { orgId: string; 
   const startRow = total === 0 ? 0 : (page - 1) * itemsPerPage + 1
   const endRow = Math.min(page * itemsPerPage, total)
 
-  const cols = [ts.colId, ...(showOrgColumn ? [ts.colOrg] : []), ts.colPortalPageCode, ts.colStatus, ts.colCreated, ts.colAction]
+  const cols = [ts.colId, ...(showOrgColumn ? [ts.colOrg] : []), ts.colPortalPageCode, ts.colMacAddress, ts.colUserName, ts.colStatus, ts.colCreated, ts.colAction]
 
   return (
     <div className="flex flex-col overflow-hidden h-[calc(100dvh-5rem)] sm:h-[calc(100dvh-6.5rem)]">
@@ -150,6 +192,7 @@ export default function SessionTable({ orgId, showOrgColumn }: { orgId: string; 
           <option value="Failed">{ts.statusFailed}</option>
           <option value="Authorized">{ts.statusAuthorized}</option>
         </select>
+        <AdvancedTimeRangeSelector value={timeRange} onChange={handleTimeRangeChange} disabled={loading} />
         <button onClick={handleSearch} className="px-4 py-2 text-sm font-semibold text-white bg-primary-600 hover:bg-primary-500 rounded-lg transition-colors">{t.admin.search}</button>
       </div>
 
@@ -185,10 +228,15 @@ export default function SessionTable({ orgId, showOrgColumn }: { orgId: string; 
                     <td className="px-4 py-3 border-b border-gray-100 whitespace-nowrap">
                       <div className="flex flex-col gap-1 items-start">
                         <span className="text-sm font-semibold text-gray-900">{s.portalPageCode ?? '—'}</span>
-                        <AuthMethodBadge authMethod={s.authMethod} />
+                        <div className="flex items-center gap-1">
+                          <AuthMethodBadge authMethod={s.authMethod} />
+                          {s.realmName && <span className="text-[10px] text-gray-400">{s.realmName}</span>}
+                        </div>
                       </div>
                     </td>
-                    <td className="px-4 py-3 border-b border-gray-100 whitespace-nowrap"><StatusBadge status={s.status} createdDate={s.createdDate} /></td>
+                    <td className="px-4 py-3 border-b border-gray-100 whitespace-nowrap text-sm text-gray-500">{s.macAddress || '—'}</td>
+                    <td className="px-4 py-3 border-b border-gray-100 whitespace-nowrap text-sm text-gray-500">{s.userName || '—'}</td>
+                    <td className="px-4 py-3 border-b border-gray-100 whitespace-nowrap"><StatusBadge status={s.status} createdDate={s.createdDate} statusDesc={s.statusDesc} /></td>
                     <td className="px-4 py-3 border-b border-gray-100 whitespace-nowrap text-sm text-gray-500">{formatDate(s.createdDate)}</td>
                     <td className="px-4 py-3 border-b border-gray-100 text-center" onClick={e => e.stopPropagation()}>
                       <button onClick={() => setSelected(s)} className="p-1.5 rounded-lg text-gray-400 hover:text-primary-600 hover:bg-gray-100 transition-colors">

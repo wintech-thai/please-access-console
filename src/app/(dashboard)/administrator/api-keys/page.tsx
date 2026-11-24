@@ -11,6 +11,7 @@ import { Search, ChevronLeft, ChevronRight, Trash2, Ban, CheckCircle, Key } from
 import clsx from 'clsx'
 import { useLang } from '@/context/LanguageContext'
 import RowActionsMenu from '@/components/RowActionsMenu'
+import { useOrgChange } from '@/hooks/useOrgChange'
 
 function ApiKeysContent() {
   const { t } = useLang()
@@ -55,29 +56,36 @@ function ApiKeysContent() {
   }, [highlightIdParam, pathname, searchParams])
 
   const autoSelectFirstRef = useRef(false)
+  const requestIdRef = useRef(0)
 
   const fetchKeys = async (currentPage: number, keyword: string = '') => {
+    //ถ้าสลับ tenant ระหว่าง request เก่ายังไม่ทันตอบกลับ request ใหม่ยิงไปแล้ว ไม่งั้น response เก่าที่มาทีหลังจะทับข้อมูลใหม่
+    const myRequestId = ++requestIdRef.current
     setLoading(true)
     try {
       const [keysRes, countRes] = await Promise.all([
         apiKeyApi.getApiKeys({ search: keyword || undefined, page: currentPage, limit: itemsPerPage }),
         apiKeyApi.getApiKeyCount({ search: keyword || undefined }),
       ])
+      if (myRequestId !== requestIdRef.current) return
       const raw = keysRes.data
       const data: ApiKeyItem[] = Array.isArray(raw) ? raw : (raw?.apiKeys ?? [])
       setKeys(data)
       const rawCount = countRes.data
       setTotal(typeof rawCount === 'number' ? rawCount : (rawCount?.count ?? 0))
     } catch (err: unknown) {
+      if (myRequestId !== requestIdRef.current) return
       toast.error(err instanceof Error ? err.message : t.apiKeys.failedToLoad)
     } finally {
-      setLoading(false)
+      if (myRequestId === requestIdRef.current) setLoading(false)
     }
   }
 
   useEffect(() => {
     fetchKeys(page, appliedSearch)
   }, [page, itemsPerPage])
+
+  useOrgChange(() => { setPage(1); setAppliedSearch(''); setSearchTerm(''); fetchKeys(1, '') })
 
   useEffect(() => {
     if (!autoSelectFirstRef.current) return

@@ -60,6 +60,7 @@ export interface TenantItem {
   status?: string | null
   orgCreatedDate?: string | null
   portalPageCount?: number | null
+  realmCount?: number | null
 }
 
 export interface GetTenantsPayload {
@@ -246,6 +247,9 @@ export interface PortalPageItem {
   apiCode?: string | null
   realmId?: string | null
   realmName?: string | null
+  language?: string | null
+  redirectUrlMode?: string | null
+  redirectUrlValue?: string | null
   createdDate?: string | null
 }
 
@@ -264,6 +268,9 @@ export interface AddPortalPagePayload {
   RealmId?: string | null
   IsDefault?: boolean
   IsEnabled?: boolean
+  Language?: string
+  RedirectUrlMode?: string | null
+  RedirectUrlValue?: string | null
 }
 
 export interface UpdatePortalPagePayload {
@@ -271,6 +278,9 @@ export interface UpdatePortalPagePayload {
   AuthMethod?: string
   Theme?: string
   RealmId?: string | null
+  Language?: string
+  RedirectUrlMode?: string | null
+  RedirectUrlValue?: string | null
 }
 
 export interface PortalSessionItem {
@@ -278,6 +288,9 @@ export interface PortalSessionItem {
   orgId?: string | null
   portalPageCode?: string | null
   authMethod?: string | null
+  realmName?: string | null
+  macAddress?: string | null
+  userName?: string | null
   parametersJson?: string | null
   status?: string | null
   statusDesc?: string | null
@@ -291,6 +304,8 @@ export interface GetPortalSessionsPayload {
   FullTextSearch?: string
   Status?: string
   PortalPageCode?: string
+  DateFrom?: string
+  DateTo?: string
 }
 
 // ─── Portal Realm ────────────────────────────────────────────────────────────

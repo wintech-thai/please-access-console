@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { Search, RefreshCcw, Eye, ChevronLeft, ChevronRight } from 'lucide-react'
 import clsx from 'clsx'
 import { toast } from 'sonner'
@@ -10,6 +10,7 @@ import { fetchWithAuth } from '@/lib/fetchWithAuth'
 import AuditLogFlyout from '@/components/AuditLogFlyout'
 import { AuditLogHistogram } from '@/components/AuditLogHistogram'
 import { AdvancedTimeRangeSelector, type TimeRangeValue } from '@/components/AdvancedTimeRangeSelector'
+import { useOrgChange } from '@/hooks/useOrgChange'
 
 const PALETTE = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d', '#f26ed5', '#a4de6c', '#d0ed57', '#ffc658']
 
@@ -130,10 +131,13 @@ function AuditLogContent() {
   }
 
   const getOrgId = () => typeof window !== 'undefined' ? localStorage.getItem('orgId') || '' : ''
+  const requestIdRef = useRef(0)
 
   const fetchData = useCallback(async () => {
     const orgId = getOrgId()
     if (!orgId) { setIsLoading(false); return }
+    //ถ้าสลับ tenant ระหว่าง request เก่ายังไม่ทันตอบกลับ request ใหม่ยิงไปแล้ว ไม่งั้น response เก่าที่มาทีหลังจะทับข้อมูลใหม่
+    const myRequestId = ++requestIdRef.current
     setIsLoading(true)
     try {
       const currentInterval = calculateInterval(timeRange)
@@ -191,6 +195,7 @@ function AuditLogContent() {
         body: JSON.stringify({ esPayload }),
       })
       const result = await res.json()
+      if (myRequestId !== requestIdRef.current) return
 
       if (result.status === 'OK') {
         setLogs(result.data.map(mapItem))
@@ -206,16 +211,18 @@ function AuditLogContent() {
         throw new Error(result.message)
       }
     } catch (err: unknown) {
+      if (myRequestId !== requestIdRef.current) return
       toast.error(err instanceof Error ? err.message : tAL.failedToLoad)
       setLogs([])
       setTotalCount(0)
       setChartData([])
     } finally {
-      setIsLoading(false)
+      if (myRequestId === requestIdRef.current) setIsLoading(false)
     }
   }, [page, itemsPerPage, searchTerm, searchField, timeRange])
 
   useEffect(() => { fetchData() }, [fetchData])
+  useOrgChange(() => { setPage(1); fetchData() })
 
   const setAndSaveTimeRange = (val: TimeRangeValue) => {
     setTimeRange(val)

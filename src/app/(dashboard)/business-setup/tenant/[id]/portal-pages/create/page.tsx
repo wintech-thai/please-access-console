@@ -11,6 +11,7 @@ import clsx from 'clsx'
 import { useLang } from '@/context/LanguageContext'
 import { useUnsavedChanges } from '@/hooks/useUnsavedChanges'
 import LeaveConfirmModal from '@/components/LeaveConfirmModal'
+import CustomThemeSelect from '@/components/CustomThemeSelect'
 
 function PortalPageCreateContent() {
   const { t } = useLang()
@@ -22,6 +23,8 @@ function PortalPageCreateContent() {
   const [code, setCode] = useState('')
   const [authMethod, setAuthMethod] = useState('Native')
   const [theme, setTheme] = useState('Default')
+  const [themeMode, setThemeMode] = useState<'System' | 'Custom'>('System')
+  const [themeId, setThemeId] = useState('')
   const [realmId, setRealmId] = useState('')
   const [language, setLanguage] = useState('Thai')
   const [redirectUrlMode, setRedirectUrlMode] = useState('Direct')
@@ -64,7 +67,8 @@ function PortalPageCreateContent() {
       const res = await portalPageApi.addPortalPage(id, {
         Code: trimmed,
         AuthMethod: authMethod,
-        Theme: theme,
+        Theme: themeMode === 'System' ? theme : null,
+        ThemeId: themeMode === 'Custom' ? (themeId || null) : null,
         RealmId: realmId || null,
         IsDefault: isDefault,
         IsEnabled: isEnabled,
@@ -112,16 +116,11 @@ function PortalPageCreateContent() {
               {error ? <p className="text-red-500 text-xs mt-1">{error}</p> : <p className="text-xs text-gray-400 mt-1">{tp.fieldCodeHint}</p>}
             </FormField>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField label={tp.fieldAuthMethod}>
                 <select value={authMethod} onChange={e => setAuthMethod(e.target.value)} className={inputCls}>
                   <option value="Native">Native</option>
                   <option value="Google">Google</option>
-                </select>
-              </FormField>
-              <FormField label={tp.fieldTheme}>
-                <select value={theme} onChange={e => setTheme(e.target.value)} className={inputCls}>
-                  <option value="Default">Default</option>
                 </select>
               </FormField>
               <FormField label={tp.fieldRealm}>
@@ -164,6 +163,24 @@ function PortalPageCreateContent() {
                 <LanguageOption label={tp.languageEnglish} checked={language === 'English'} onClick={() => setLanguage('English')} />
               </div>
             </FormField>
+
+            <FormField label={tp.fieldTheme}>
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                <div className="flex gap-1.5 flex-none">
+                  <ThemeModeButton label={tp.themeModeSystem} checked={themeMode === 'System'} onClick={() => setThemeMode('System')} />
+                  <ThemeModeButton label={tp.themeModeCustom} checked={themeMode === 'Custom'} onClick={() => setThemeMode('Custom')} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  {themeMode === 'System' ? (
+                    <select value={theme} onChange={e => setTheme(e.target.value)} className={inputCls}>
+                      <option value="Default">Default</option>
+                    </select>
+                  ) : (
+                    <CustomThemeSelect value={themeId} onChange={setThemeId} authMethod={authMethod} language={language} />
+                  )}
+                </div>
+              </div>
+            </FormField>
           </div>
         </div>
 
@@ -186,6 +203,21 @@ function LanguageOption({ label, checked, onClick }: { label: string; checked: b
       className={clsx(
         'px-4 py-2 text-sm font-medium rounded-lg border transition-colors',
         checked ? 'bg-primary-50 border-primary-400 text-primary-700' : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
+      )}
+    >
+      {label}
+    </button>
+  )
+}
+
+function ThemeModeButton({ label, checked, onClick }: { label: string; checked: boolean; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={clsx(
+        'px-2.5 py-1 text-xs font-medium rounded-md border transition-colors',
+        checked ? 'bg-primary-50 border-primary-400 text-primary-700' : 'bg-white border-gray-200 text-gray-500 hover:bg-gray-50'
       )}
     >
       {label}

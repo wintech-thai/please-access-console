@@ -247,17 +247,29 @@ export default function LoginPortalClient({ orgId, tenantId, apiKey, data, httpS
 
   const isNative = (portalPage?.authMethod ?? '').toLowerCase() === 'native'
 
+  //การ์ด redirecting หน้าตาเดียวกับ default theme ใช้ overlay ทับ custom theme ด้วย จะได้ดูเหมือนกันทั้งสองแบบ
+  const redirectingCard = (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-sm px-4">
+      <div className="bg-slate-800/90 backdrop-blur-xl border border-slate-700/60 rounded-2xl shadow-2xl shadow-slate-950/60 px-8 py-8 flex flex-col items-center text-center max-w-sm w-full">
+        <div className="w-12 h-12 rounded-full bg-emerald-500/10 flex items-center justify-center mb-3">
+          <CheckCircle2 className="w-6 h-6 text-emerald-400" />
+        </div>
+        <p className="text-emerald-300 font-medium text-sm mb-3">{c.redirecting}</p>
+        <Loader2 className="w-5 h-5 animate-spin text-blue-400" />
+      </div>
+    </div>
+  )
+
   //custom theme เป็นหน้า login เต็มหน้าในตัวเองอยู่แล้ว (ออกแบบมาให้ครอบคลุมทั้งหน้า) เลย render แทนที่ chrome ปกติทั้งหมด ไม่ซ้อนการ์ดเข้าไปข้างใน
   //คงหน้า custom theme ไว้ตอน redirecting ด้วย ไม่งั้นจะเห็นหน้า default วาบก่อน redirect จริง
   if (!errorMsg && customThemeHtml) {
     return (
       <>
         <div dangerouslySetInnerHTML={{ __html: customThemeHtml }} />
-        {(signingIn || redirecting || loginError) && (
+        {redirecting && redirectingCard}
+        {!redirecting && (signingIn || loginError) && (
           <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-slate-900/95 border border-slate-700/60 rounded-lg px-4 py-2 shadow-lg z-50">
-            <p className={clsx('text-xs text-center', loginError ? 'text-rose-400' : redirecting ? 'text-emerald-400' : 'text-slate-300')}>
-              {redirecting ? c.redirecting : signingIn ? c.signingIn : loginError}
-            </p>
+            <p className={clsx('text-xs text-center', loginError ? 'text-rose-400' : 'text-slate-300')}>{signingIn ? c.signingIn : loginError}</p>
           </div>
         )}
       </>
@@ -341,14 +353,6 @@ export default function LoginPortalClient({ orgId, tenantId, apiKey, data, httpS
                   </div>
                 )}
               </div>
-            ) : redirecting ? (
-              <div className="flex flex-col items-center py-8 text-center">
-                <div className="w-12 h-12 rounded-full bg-emerald-500/10 flex items-center justify-center mb-3">
-                  <CheckCircle2 className="w-6 h-6 text-emerald-400" />
-                </div>
-                <p className="text-emerald-300 font-medium text-sm mb-3">{c.redirecting}</p>
-                <Loader2 className="w-5 h-5 animate-spin text-blue-400" />
-              </div>
             ) : isNative ? (
               <form onSubmit={handleLogin} className="flex flex-col gap-4">
                 <div>
@@ -401,6 +405,7 @@ export default function LoginPortalClient({ orgId, tenantId, apiKey, data, httpS
           {c.poweredBy} <span className="text-slate-300 font-semibold">Dev<span className="text-blue-400"> Hub</span></span>
         </p>
       </div>
+      {redirecting && redirectingCard}
     </div>
   )
 }

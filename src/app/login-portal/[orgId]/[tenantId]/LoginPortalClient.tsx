@@ -248,14 +248,16 @@ export default function LoginPortalClient({ orgId, tenantId, apiKey, data, httpS
   const isNative = (portalPage?.authMethod ?? '').toLowerCase() === 'native'
 
   //custom theme เป็นหน้า login เต็มหน้าในตัวเองอยู่แล้ว (ออกแบบมาให้ครอบคลุมทั้งหน้า) เลย render แทนที่ chrome ปกติทั้งหมด ไม่ซ้อนการ์ดเข้าไปข้างใน
-  //ไม่ครอบ error/redirecting เพราะ state พวกนั้นไม่เกี่ยวกับ theme เลย
-  if (!errorMsg && !redirecting && customThemeHtml) {
+  //คงหน้า custom theme ไว้ตอน redirecting ด้วย ไม่งั้นจะเห็นหน้า default วาบก่อน redirect จริง
+  if (!errorMsg && customThemeHtml) {
     return (
       <>
         <div dangerouslySetInnerHTML={{ __html: customThemeHtml }} />
-        {(signingIn || loginError) && (
+        {(signingIn || redirecting || loginError) && (
           <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-slate-900/95 border border-slate-700/60 rounded-lg px-4 py-2 shadow-lg z-50">
-            <p className={clsx('text-xs text-center', loginError ? 'text-rose-400' : 'text-slate-300')}>{signingIn ? c.signingIn : loginError}</p>
+            <p className={clsx('text-xs text-center', loginError ? 'text-rose-400' : redirecting ? 'text-emerald-400' : 'text-slate-300')}>
+              {redirecting ? c.redirecting : signingIn ? c.signingIn : loginError}
+            </p>
           </div>
         )}
       </>

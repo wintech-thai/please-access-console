@@ -5,7 +5,7 @@ import { Plus, Trash2, Eye, Sparkles, Upload } from 'lucide-react'
 import clsx from 'clsx'
 import type { PortalPageThemeVariable } from '@/lib/api/types'
 import { useLang } from '@/context/LanguageContext'
-import { getStarterTemplate } from '@/lib/theme-starter-templates'
+import { getStarterTemplate, type StarterStyle } from '@/lib/theme-starter-templates'
 import { toast } from 'sonner'
 import CodeMirror from '@uiw/react-codemirror'
 import { html } from '@codemirror/lang-html'
@@ -71,9 +71,9 @@ export default function PortalPageThemeFormBody({
 
   const confirmOverwrite = () => !htmlTemplate.trim() || window.confirm(tt.confirmOverwriteTemplate)
 
-  const handleLoadExample = () => {
+  const handleLoadExample = (style: StarterStyle) => {
     if (!confirmOverwrite()) return
-    const starter = getStarterTemplate(authType)
+    const starter = getStarterTemplate(authType, style)
     setHtmlTemplate(starter.html)
     setVariables(starter.variables)
   }
@@ -193,10 +193,17 @@ export default function PortalPageThemeFormBody({
         <div className="mt-2 flex flex-wrap gap-2">
           <button
             type="button"
-            onClick={handleLoadExample}
+            onClick={() => handleLoadExample('card')}
             className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-700 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
           >
             <Sparkles className="w-3.5 h-3.5" />{tt.loadExample}
+          </button>
+          <button
+            type="button"
+            onClick={() => handleLoadExample('split')}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-700 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+          >
+            <Sparkles className="w-3.5 h-3.5" />{tt.loadExampleSplit}
           </button>
           <button
             type="button"

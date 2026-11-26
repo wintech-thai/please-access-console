@@ -15,6 +15,7 @@ import { useBrand } from '@/context/BrandContext'
 
 const BUSINESS_SETUP_ITEMS = [
   { key: 'tenant', href: '/business-setup/tenant', label: { th: 'Tenant', en: 'Tenant' } },
+  { key: 'theme', href: '/business-setup/theme', label: { th: 'Theme', en: 'Theme' } },
   { key: 'session', href: '/business-setup/session', label: { th: 'Session', en: 'Session' } },
 ]
 
@@ -84,15 +85,17 @@ export default function Navbar() {
             </button>
             {bsOpen && (
               <div className="absolute left-0 top-full mt-1.5 w-44 bg-white rounded-xl shadow-xl border border-gray-200 py-1 z-50">
-                {BUSINESS_SETUP_ITEMS.map(item => (
-                  <Link
-                    key={item.key}
-                    href={item.href}
-                    onClick={() => setBsOpen(false)}
-                    className={clsx('flex items-center gap-2.5 px-4 py-2.5 text-sm transition-colors', pathname.startsWith(item.href) ? 'text-primary-700 font-semibold bg-primary-50' : 'text-gray-700 hover:bg-gray-50 hover:text-primary-600')}
-                  >
-                    {lang === 'th' ? item.label.th : item.label.en}
-                  </Link>
+                {BUSINESS_SETUP_ITEMS.map((item, i) => (
+                  <div key={item.key}>
+                    <Link
+                      href={item.href}
+                      onClick={() => setBsOpen(false)}
+                      className={clsx('flex items-center gap-2.5 px-4 py-2.5 text-sm transition-colors', pathname.startsWith(item.href) ? 'text-primary-700 font-semibold bg-primary-50' : 'text-gray-700 hover:bg-gray-50 hover:text-primary-600')}
+                    >
+                      {lang === 'th' ? item.label.th : item.label.en}
+                    </Link>
+                    {i === 1 && <div className="border-t border-gray-100" />}
+                  </div>
                 ))}
               </div>
             )}
@@ -186,15 +189,17 @@ export default function Navbar() {
           </Link>
           <div>
             <p className="px-3 py-1 text-xs font-semibold text-white/50 uppercase tracking-widest">{t.nav.businessSetup}</p>
-            {BUSINESS_SETUP_ITEMS.map(item => (
-              <Link
-                key={item.key}
-                href={item.href}
-                onClick={() => setMobileMenuOpen(false)}
-                className={clsx('flex items-center gap-2 pl-6 pr-3 py-2.5 rounded-lg text-sm font-medium transition-colors', pathname.startsWith(item.href) ? 'bg-white/20 text-white' : 'text-white hover:bg-white/15')}
-              >
-                {lang === 'th' ? item.label.th : item.label.en}
-              </Link>
+            {BUSINESS_SETUP_ITEMS.map((item, i) => (
+              <div key={item.key}>
+                <Link
+                  href={item.href}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={clsx('flex items-center gap-2 pl-6 pr-3 py-2.5 rounded-lg text-sm font-medium transition-colors', pathname.startsWith(item.href) ? 'bg-white/20 text-white' : 'text-white hover:bg-white/15')}
+                >
+                  {lang === 'th' ? item.label.th : item.label.en}
+                </Link>
+                {i === 1 && <div className="border-t border-white/10 my-1 mx-3" />}
+              </div>
             ))}
           </div>
           <Link href="/report-analytic" onClick={() => setMobileMenuOpen(false)} className={clsx('flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors', pathname === '/report-analytic' ? 'bg-white/20 text-white' : 'text-white hover:bg-white/15')}>

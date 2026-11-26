@@ -69,16 +69,11 @@ export default function TenantPortalPageDetailPage() {
             <input value={page?.code ?? ''} disabled className={inputCls} />
           </FormField>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <FormField label={tp.fieldAuthMethod}>
               <select value={page?.authMethod ?? 'Native'} disabled className={inputCls}>
                 <option value="Native">Native</option>
                 <option value="Google">Google</option>
-              </select>
-            </FormField>
-            <FormField label={tp.fieldTheme}>
-              <select value={page?.theme ?? 'Default'} disabled className={inputCls}>
-                <option value="Default">Default</option>
               </select>
             </FormField>
             <FormField label={tp.fieldRealm}>
@@ -112,6 +107,12 @@ export default function TenantPortalPageDetailPage() {
             <div className="flex gap-3">
               <LanguageOption label={tp.languageThai} checked={(page?.language ?? 'Thai') === 'Thai'} />
               <LanguageOption label={tp.languageEnglish} checked={page?.language === 'English'} />
+            </div>
+          </FormField>
+
+          <FormField label={tp.fieldTheme}>
+            <div className={clsx(inputCls, 'bg-gray-50 text-gray-500 cursor-not-allowed')}>
+              {page?.themeId ? `${tp.themeModeCustom}: ${page?.themeName ?? ''}` : `${tp.themeModeSystem}: ${page?.theme ?? 'Default'}`}
             </div>
           </FormField>
         </div>

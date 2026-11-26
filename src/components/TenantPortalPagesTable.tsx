@@ -217,7 +217,7 @@ export default function TenantPortalPagesTable({ orgId }: { orgId: string }) {
                     </td>
                     <td className="px-4 py-3 border-b border-gray-100 whitespace-nowrap text-sm text-gray-600">{row.authMethod ?? '—'}</td>
                     <td className="px-4 py-3 border-b border-gray-100 whitespace-nowrap text-sm text-gray-600">{row.realmName ?? '—'}</td>
-                    <td className="px-4 py-3 border-b border-gray-100 whitespace-nowrap text-sm text-gray-600">{row.theme ?? '—'}</td>
+                    <td className="px-4 py-3 border-b border-gray-100 whitespace-nowrap text-sm text-gray-600">{row.themeId ? (row.themeName ?? '—') : (row.theme ?? '—')}</td>
                     <td className="px-4 py-3 border-b border-gray-100 whitespace-nowrap">
                       {isDefault ? <Check className="w-4 h-4 text-emerald-600" /> : <span className="text-sm text-gray-300">—</span>}
                     </td>

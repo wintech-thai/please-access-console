@@ -241,6 +241,8 @@ export interface PortalPageItem {
   code?: string | null
   authMethod?: string | null
   theme?: string | null
+  themeId?: string | null
+  themeName?: string | null
   isDefault?: boolean | null
   isEnabled?: boolean | null
   apiKeyId?: string | null
@@ -264,7 +266,8 @@ export interface GetPortalPagesPayload {
 export interface AddPortalPagePayload {
   Code: string
   AuthMethod?: string
-  Theme?: string
+  Theme?: string | null
+  ThemeId?: string | null
   RealmId?: string | null
   IsDefault?: boolean
   IsEnabled?: boolean
@@ -276,7 +279,8 @@ export interface AddPortalPagePayload {
 export interface UpdatePortalPagePayload {
   Code: string
   AuthMethod?: string
-  Theme?: string
+  Theme?: string | null
+  ThemeId?: string | null
   RealmId?: string | null
   Language?: string
   RedirectUrlMode?: string | null
@@ -371,4 +375,49 @@ export interface UpdateRealmUserPayload {
 
 export interface ResetRealmUserPasswordPayload {
   Password: string
+}
+
+// ─── Portal Page Theme ───────────────────────────────────────────────────────
+
+export interface PortalPageThemeVariable {
+  name?: string | null
+  value?: string | null
+}
+
+export interface PortalPageThemeItem {
+  themeId: string
+  orgId?: string | null
+  themeName?: string | null
+  description?: string | null
+  authType?: string | null // 'Native' | 'Google'
+  language?: string | null // 'Thai' | 'English'
+  variables?: PortalPageThemeVariable[] | null
+  htmlTemplate?: string | null
+  useCount?: number | null
+  createdDate?: string | null
+}
+
+export interface GetPortalPageThemesPayload {
+  Offset?: number
+  Limit?: number
+  FullTextSearch?: string
+  AuthType?: string
+  Language?: string
+}
+
+export interface AddPortalPageThemePayload {
+  ThemeName: string
+  Description?: string
+  AuthType: string
+  Language: string
+  Variables?: PortalPageThemeVariable[]
+  HtmlTemplate?: string
+}
+
+export interface UpdatePortalPageThemePayload {
+  ThemeName: string
+  Description?: string
+  Language: string
+  Variables?: PortalPageThemeVariable[]
+  HtmlTemplate?: string
 }

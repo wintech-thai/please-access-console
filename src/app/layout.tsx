@@ -46,7 +46,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           } catch(e) {}
         `}} />
       </head>
-      <body>
+      <body className="font-sans">
         <BrandProvider initialConfig={initialConfig}>
           {children}
         </BrandProvider>

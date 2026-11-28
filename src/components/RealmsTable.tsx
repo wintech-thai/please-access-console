@@ -100,11 +100,12 @@ export default function RealmsTable({ orgId }: { orgId: string }) {
                 {[
                   { label: tr.colName, width: '' },
                   { label: tr.colAuthType, width: 'w-[13%]' },
+                  { label: tr.colDescription, width: 'w-[20%]' },
                   { label: tr.colPortalPages, width: 'w-[16%]' },
                   { label: tr.colRealmUsers, width: 'w-[13%]' },
                   { label: tr.colCreated, width: 'w-[14%]' },
                 ].map(({ label, width }, i, arr) => (
-                  <th key={label} className={clsx('px-4 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider border-b border-gray-200 whitespace-nowrap', width, (i === 2 || i === 3) ? 'text-center' : 'text-left', i === 0 && 'rounded-tl-xl', i === arr.length - 1 && 'rounded-tr-xl')}>
+                  <th key={label} className={clsx('px-4 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider border-b border-gray-200 whitespace-nowrap', width, (i === 3 || i === 4) ? 'text-center' : 'text-left', i === 0 && 'rounded-tl-xl', i === arr.length - 1 && 'rounded-tr-xl')}>
                     {label}
                   </th>
                 ))}
@@ -112,10 +113,10 @@ export default function RealmsTable({ orgId }: { orgId: string }) {
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={5} className="px-4 py-16 text-center text-sm text-gray-400">{t.admin.loading}</td></tr>
+                <tr><td colSpan={6} className="px-4 py-16 text-center text-sm text-gray-400">{t.admin.loading}</td></tr>
               ) : paginated.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="py-20 text-center">
+                  <td colSpan={6} className="py-20 text-center">
                     <p className="text-sm font-semibold text-gray-500">{tr.noRealmsFound}</p>
                   </td>
                 </tr>
@@ -133,6 +134,7 @@ export default function RealmsTable({ orgId }: { orgId: string }) {
                   >
                     <td className="px-4 py-3 border-b border-gray-100 whitespace-nowrap text-sm font-semibold text-gray-900 truncate">{row.realmName ?? '—'}</td>
                     <td className="px-4 py-3 border-b border-gray-100 whitespace-nowrap"><AuthTypeBadge authType={row.authType} /></td>
+                    <td className="px-4 py-3 border-b border-gray-100 text-sm text-gray-600 max-w-[220px] truncate" title={row.description ?? ''}>{row.description || '—'}</td>
                     <td className="px-4 py-3 border-b border-gray-100 whitespace-nowrap text-sm text-gray-600 text-center">{row.portalPageCount ?? 0}</td>
                     <td className="px-4 py-3 border-b border-gray-100 whitespace-nowrap text-sm text-center" onClick={e => e.stopPropagation()}>
                       {isNative ? (

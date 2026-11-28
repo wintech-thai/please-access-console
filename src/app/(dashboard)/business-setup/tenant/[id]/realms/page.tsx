@@ -44,7 +44,7 @@ function AuthTypeBadge({ authType }: { authType?: string | null }) {
   )
 }
 
-function AddRealmDropdown({ id, label, nativeLabel, googleLabel }: { id: string; label: string; nativeLabel: string; googleLabel: string }) {
+function AddRealmDropdown({ id, label, nativeLabel, googleLabel }: { id: string; label: string; nativeLabel: string; googleLabel?: string }) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
   const router = useRouter()
@@ -73,10 +73,10 @@ function AddRealmDropdown({ id, label, nativeLabel, googleLabel }: { id: string;
             {nativeLabel}
           </button>
           <button
-            disabled
-            className="w-full flex items-center justify-between px-4 py-2 text-sm text-left text-gray-300 cursor-not-allowed"
+            onClick={() => { setOpen(false); router.push(`/business-setup/tenant/${id}/realms/create?authType=Google`) }}
+            className="w-full flex items-center justify-between px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-50 transition-colors"
           >
-            Google <span className="text-[10px] text-gray-300">{googleLabel}</span>
+            {googleLabel ?? 'Google'}
           </button>
         </div>
       )}
@@ -230,7 +230,7 @@ function RealmsContent() {
             </button>
           </div>
           <div className="flex gap-2 w-full sm:w-auto justify-end">
-            <AddRealmDropdown id={id} label={tr.addRealm} nativeLabel={tr.authTypeNative} googleLabel={tr.authTypeGoogleComingSoon} />
+            <AddRealmDropdown id={id} label={tr.addRealm} nativeLabel={tr.authTypeNative} googleLabel={tr.authTypeGoogle} />
             <button
               onClick={handleBulkDelete}
               disabled={selectedIds.length === 0}
@@ -253,8 +253,8 @@ function RealmsContent() {
                     className="rounded border-gray-300 text-primary-600 focus:ring-primary-500 w-4 h-4"
                   />
                 </th>
-                {[tr.colName, tr.colAuthType, tr.colPortalPages, tr.colRealmUsers, tr.colCreated, tr.colAction].map((col, i, arr) => (
-                  <th key={col} className={clsx('px-4 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider border-b border-gray-200 whitespace-nowrap', i === arr.length - 1 ? 'w-14 text-center' : (i === 2 || i === 3) ? 'text-center' : 'text-left')}>
+                {[tr.colName, tr.colAuthType, tr.colDescription, tr.colPortalPages, tr.colRealmUsers, tr.colCreated, tr.colAction].map((col, i, arr) => (
+                  <th key={col} className={clsx('px-4 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider border-b border-gray-200 whitespace-nowrap', i === arr.length - 1 ? 'w-14 text-center' : (i === 3 || i === 4) ? 'text-center' : 'text-left')}>
                     {col}
                   </th>
                 ))}
@@ -263,7 +263,7 @@ function RealmsContent() {
             <tbody>
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-20 text-center">
+                  <td colSpan={8} className="py-20 text-center">
                     <p className="text-sm font-semibold text-gray-500">{tr.noRealmsFound}</p>
                     <p className="text-xs text-gray-400 mt-1">{tr.noRealmsSubtitle}</p>
                   </td>
@@ -297,6 +297,7 @@ function RealmsContent() {
                           </Link>
                         </td>
                         <td className="px-4 py-3 border-b border-gray-100 whitespace-nowrap"><AuthTypeBadge authType={row.authType} /></td>
+                        <td className="px-4 py-3 border-b border-gray-100 text-sm text-gray-600 max-w-[220px] truncate" title={row.description ?? ''}>{row.description || '—'}</td>
                         <td className="px-4 py-3 border-b border-gray-100 whitespace-nowrap text-sm text-gray-600 text-center">{row.portalPageCount ?? 0}</td>
                         <td className="px-4 py-3 border-b border-gray-100 whitespace-nowrap text-sm text-gray-600 text-center" onClick={e => e.stopPropagation()}>
                           {isNative ? (

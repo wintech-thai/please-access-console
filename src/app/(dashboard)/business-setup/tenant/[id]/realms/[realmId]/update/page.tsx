@@ -5,12 +5,13 @@ import { useRouter, useParams } from 'next/navigation'
 import { portalRealmApi } from '@/lib/api/portal-realm.api'
 import type { RealmItem } from '@/lib/api/types'
 import { toast } from 'sonner'
-import { ChevronLeft, Code2 } from 'lucide-react'
+import { ChevronLeft, Code2, Copy, Check } from 'lucide-react'
 import clsx from 'clsx'
 import { useLang } from '@/context/LanguageContext'
 import { useUnsavedChanges } from '@/hooks/useUnsavedChanges'
 import LeaveConfirmModal from '@/components/LeaveConfirmModal'
 import JsonViewModal from '@/components/JsonViewModal'
+import { buildGoogleRedirectUri } from '@/lib/google-oauth'
 
 export default function RealmUpdatePage() {
   const { t } = useLang()
@@ -23,11 +24,29 @@ export default function RealmUpdatePage() {
   const [realmName, setRealmName] = useState('')
   const [originalName, setOriginalName] = useState('')
   const [authType, setAuthType] = useState('')
+  const [description, setDescription] = useState('')
+  const [originalDescription, setOriginalDescription] = useState('')
+  const [googleClientId, setGoogleClientId] = useState('')
+  const [originalGoogleClientId, setOriginalGoogleClientId] = useState('')
+  const [googleClientSecret, setGoogleClientSecret] = useState('')
+  const [originalGoogleClientSecret, setOriginalGoogleClientSecret] = useState('')
+  const [clientIdError, setClientIdError] = useState('')
+  const [clientSecretError, setClientSecretError] = useState('')
+  const [copied, setCopied] = useState(false)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [realm, setRealm] = useState<RealmItem | null>(null)
   const [jsonViewOpen, setJsonViewOpen] = useState(false)
+
+  const isGoogle = authType === 'Google'
+  const callbackUrl = useMemo(() => buildGoogleRedirectUri(id), [id])
+
+  const copyCallbackUrl = () => {
+    navigator.clipboard.writeText(callbackUrl)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
 
   const loadData = useCallback(async () => {
     setLoading(true)
@@ -38,6 +57,12 @@ export default function RealmUpdatePage() {
       setRealmName(realm?.realmName ?? '')
       setOriginalName(realm?.realmName ?? '')
       setAuthType(realm?.authType ?? '')
+      setDescription(realm?.description ?? '')
+      setOriginalDescription(realm?.description ?? '')
+      setGoogleClientId(realm?.googleClientId ?? '')
+      setOriginalGoogleClientId(realm?.googleClientId ?? '')
+      setGoogleClientSecret(realm?.googleClientSecret ?? '')
+      setOriginalGoogleClientSecret(realm?.googleClientSecret ?? '')
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : tr.failedToLoadRealm)
     } finally {
@@ -47,7 +72,10 @@ export default function RealmUpdatePage() {
 
   useEffect(() => { loadData() }, [loadData])
 
-  const isDirty = useMemo(() => realmName !== originalName, [realmName, originalName])
+  const isDirty = useMemo(
+    () => realmName !== originalName || description !== originalDescription || googleClientId !== originalGoogleClientId || googleClientSecret !== originalGoogleClientSecret,
+    [realmName, originalName, description, originalDescription, googleClientId, originalGoogleClientId, googleClientSecret, originalGoogleClientSecret]
+  )
   const { showConfirm, guardNavigation, confirmLeave, cancelLeave } = useUnsavedChanges(isDirty)
 
   const goBack = () => guardNavigation(() => router.push(`/business-setup/tenant/${id}/realms`))
@@ -57,9 +85,20 @@ export default function RealmUpdatePage() {
     const trimmed = realmName.trim()
     if (!trimmed) { setError(tr.nameRequired); return }
     if (!isDirty) { router.push(`/business-setup/tenant/${id}/realms`); return }
+    if (isGoogle) {
+      const idTrimmed = googleClientId.trim()
+      const secretTrimmed = googleClientSecret.trim()
+      setClientIdError(idTrimmed ? '' : tr.clientIdRequired)
+      setClientSecretError(secretTrimmed ? '' : tr.clientSecretRequired)
+      if (!idTrimmed || !secretTrimmed) return
+    }
     setSaving(true)
     try {
-      await portalRealmApi.updateRealmById(id, realmId, { RealmName: trimmed })
+      await portalRealmApi.updateRealmById(id, realmId, {
+        RealmName: trimmed,
+        Description: description.trim() || undefined,
+        ...(isGoogle ? { GoogleClientId: googleClientId.trim(), GoogleClientSecret: googleClientSecret.trim() } : {}),
+      })
       toast.success(tr.updateSuccess)
       sessionStorage.setItem(`access_realms_highlight_${id}`, realmId)
       router.push(`/business-setup/tenant/${id}/realms`)
@@ -126,7 +165,57 @@ export default function RealmUpdatePage() {
                 </select>
               </FormField>
             </div>
+            <div className="mt-4">
+              <FormField label={tr.fieldDescription}>
+                <textarea
+                  value={description}
+                  onChange={e => setDescription(e.target.value)}
+                  placeholder={tr.fieldDescriptionPlaceholder}
+                  rows={2}
+                  className={clsx(inputCls, 'resize-none')}
+                />
+              </FormField>
+            </div>
           </div>
+
+          {isGoogle && (
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 px-7 py-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <FormField label={tr.fieldClientId} required>
+                  <input
+                    value={googleClientId}
+                    onChange={e => { setGoogleClientId(e.target.value); setClientIdError('') }}
+                    placeholder={tr.fieldClientIdPlaceholder}
+                    autoComplete="off"
+                    className={clsx(inputCls, clientIdError && 'border-red-400 focus:ring-red-400')}
+                  />
+                  {clientIdError && <p className="text-red-500 text-xs mt-1">{clientIdError}</p>}
+                </FormField>
+                <FormField label={tr.fieldClientSecret} required>
+                  <input
+                    value={googleClientSecret}
+                    onChange={e => { setGoogleClientSecret(e.target.value); setClientSecretError('') }}
+                    placeholder={tr.fieldClientSecretPlaceholder}
+                    type="password"
+                    autoComplete="new-password"
+                    className={clsx(inputCls, clientSecretError && 'border-red-400 focus:ring-red-400')}
+                  />
+                  {clientSecretError && <p className="text-red-500 text-xs mt-1">{clientSecretError}</p>}
+                </FormField>
+              </div>
+              <div className="mt-4">
+                <FormField label={tr.fieldCallbackUrl} hint={tr.callbackUrlHint}>
+                  <div className="flex gap-2">
+                    <input readOnly value={callbackUrl} className={clsx(inputCls, 'bg-gray-50 text-gray-600 font-mono text-xs')} />
+                    <button type="button" onClick={copyCallbackUrl} className="flex-none flex items-center gap-1.5 px-3 py-2.5 text-sm font-medium text-gray-700 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                      {copied ? <Check className="w-4 h-4 text-green-600" /> : <Copy className="w-4 h-4" />}
+                      {copied ? tr.copiedCallbackUrl : tr.copyCallbackUrl}
+                    </button>
+                  </div>
+                </FormField>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="flex-none -mx-3 sm:-mx-6 px-4 sm:px-8 py-4 flex items-center justify-end gap-3 bg-white border-t border-gray-100 shadow-[0_-4px_12px_rgba(0,0,0,0.06)]">

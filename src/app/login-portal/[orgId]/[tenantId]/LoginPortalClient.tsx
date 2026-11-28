@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Wifi, AlertCircle, Loader2, Eye, EyeOff, ChevronDown, ChevronUp, CheckCircle2, Copy, Check } from 'lucide-react'
 import { renderPortalPageThemeHtml, type ThemeRenderVariable } from '@/lib/theme-render'
+import { getApiDomain } from '@/lib/google-oauth'
 import clsx from 'clsx'
 
 interface PortalInfo {
@@ -31,6 +32,8 @@ const COPY: Record<Lang, Record<string, string>> = {
     signingIn: 'กำลังเข้าสู่ระบบ...',
     redirecting: 'เข้าสู่ระบบสำเร็จ กำลังพาคุณไปต่อ...',
     comingSoon: 'การเข้าสู่ระบบยังไม่พร้อมใช้งานสำหรับ portal นี้',
+    loginWithGoogle: 'เข้าสู่ระบบด้วย Google',
+    errGoogleLoginFailed: 'ไม่สามารถเริ่มการเข้าสู่ระบบด้วย Google ได้ กรุณาลองใหม่อีกครั้ง',
     showDetails: 'แสดงรายละเอียด',
     hideDetails: 'ซ่อนรายละเอียด',
     poweredBy: 'สนับสนุนโดย',
@@ -57,6 +60,8 @@ const COPY: Record<Lang, Record<string, string>> = {
     signingIn: 'Signing in...',
     redirecting: 'Signed in successfully. Redirecting...',
     comingSoon: 'Login is coming soon for this portal',
+    loginWithGoogle: 'Login with Google',
+    errGoogleLoginFailed: 'Could not start Google sign-in. Please try again.',
     showDetails: 'Show details',
     hideDetails: 'Hide details',
     poweredBy: 'Powered by',
@@ -227,6 +232,34 @@ export default function LoginPortalClient({ orgId, tenantId, apiKey, data, httpS
     await performNativeLogin(username, password)
   }
 
+  //กดปุ่ม "Login with Google" - ขอ Google auth URL จาก backend แล้ว redirect tab เดิมไปเลย (ไม่เปิด tab ใหม่ ตามสเปค x006)
+  const performGoogleLogin = async () => {
+    setLoginError('')
+    setSigningIn(true)
+    try {
+      const url = `/api/proxy/api/PortalSession/org/${encodeURIComponent(orgId)}/action/InitiateGoogleLogin/${encodeURIComponent(portalSessionId)}`
+      const res = await fetch(url, {
+        method: 'POST',
+        credentials: 'omit',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(apiKey ? { Authorization: `Basic ${btoa(`portal-page:${apiKey}`)}` } : {}),
+        },
+        body: JSON.stringify({ Domain: getApiDomain() }),
+      })
+      const data = await res.json().catch(() => null)
+      if (data?.status === 'OK' && data?.googleAuthUrl) {
+        window.location.href = data.googleAuthUrl
+      } else {
+        setSigningIn(false)
+        setLoginError(data?.description || c.errGoogleLoginFailed)
+      }
+    } catch (err: unknown) {
+      setSigningIn(false)
+      setLoginError(err instanceof Error ? err.message : c.errGoogleLoginFailed)
+    }
+  }
+
   //เปิดให้ custom theme html (ที่ render ผ่าน dangerouslySetInnerHTML) เรียกกลับเข้ามาที่ login flow จริงได้ ผ่าน $SYSTEM_CODE_GEN1/$SYSTEM_CODE_GEN2 ใน template
   useEffect(() => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -240,12 +273,13 @@ export default function LoginPortalClient({ orgId, tenantId, apiKey, data, httpS
     }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ;(window as any).__papGoogleLogin = () => {
-      setLoginError(c.comingSoon)
+      performGoogleLogin()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orgId, portalSessionId, apiKey])
 
   const isNative = (portalPage?.authMethod ?? '').toLowerCase() === 'native'
+  const isGoogle = (portalPage?.authMethod ?? '').toLowerCase() === 'google'
 
   //การ์ด redirecting หน้าตาเดียวกับ default theme ใช้ overlay ทับ custom theme ด้วย จะได้ดูเหมือนกันทั้งสองแบบ
   const redirectingCard = (
@@ -393,6 +427,23 @@ export default function LoginPortalClient({ orgId, tenantId, apiKey, data, httpS
                   {signingIn ? c.signingIn : c.signIn}
                 </button>
               </form>
+            ) : isGoogle ? (
+              <div className="flex flex-col gap-4">
+                {loginError && <p className="text-rose-400 text-xs text-center">{loginError}</p>}
+                <button
+                  type="button"
+                  onClick={performGoogleLogin}
+                  disabled={signingIn}
+                  className="w-full py-3 text-sm font-semibold text-gray-800 bg-white hover:bg-gray-50 disabled:opacity-60 border border-slate-300 rounded-xl transition-colors flex items-center justify-center gap-2.5"
+                >
+                  {signingIn ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3c-1.6 4.7-6.1 8-11.3 8-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C33.9 6.1 29.2 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.7-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.6 16 19 13 24 13c3.1 0 5.9 1.2 8 3.1l5.7-5.7C33.9 6.1 29.2 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.1 0 9.8-2 13.3-5.2l-6.1-5.2C29.2 35.5 26.7 36 24 36c-5.2 0-9.6-3.3-11.2-8l-6.5 5C9.6 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.2 4.3-4.1 5.6l6.1 5.2C40.9 36.3 44 30.7 44 24c0-1.3-.1-2.7-.4-3.5z"/></svg>
+                  )}
+                  {c.loginWithGoogle}
+                </button>
+              </div>
             ) : (
               <div className="flex flex-col items-center py-6 text-center">
                 <p className="text-xs text-slate-500">{c.comingSoon}{portalPage?.code ? ` (${portalPage.code})` : ''}</p>

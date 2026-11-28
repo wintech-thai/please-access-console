@@ -377,7 +377,14 @@ function PortalPagesContent() {
                         </td>
                         <td className="px-4 py-3 border-b border-gray-100 whitespace-nowrap text-sm text-gray-600">{row.authMethod ?? '—'}</td>
                         <td className="px-4 py-3 border-b border-gray-100 whitespace-nowrap text-sm text-gray-600">{row.realmName ?? '—'}</td>
-                        <td className="px-4 py-3 border-b border-gray-100 whitespace-nowrap text-sm text-gray-600">{row.themeId ? (row.themeName ?? '—') : (row.theme ?? '—')}</td>
+                        <td className="px-4 py-3 border-b border-gray-100 whitespace-nowrap text-sm text-gray-600">
+                          <div className="flex flex-col items-start gap-1">
+                            <span>{row.themeId ? (row.themeName ?? '—') : (row.theme ?? '—')}</span>
+                            <span className={clsx('inline-flex items-center px-1.5 py-0.5 text-[10px] font-bold rounded-full ring-1', row.themeId ? 'bg-purple-50 text-purple-700 ring-purple-200' : 'bg-sky-50 text-sky-700 ring-sky-200')}>
+                              {row.themeId ? tp.themeBadgeCustom : tp.themeBadgeSystem}
+                            </span>
+                          </div>
+                        </td>
                         <td className="px-4 py-3 border-b border-gray-100 whitespace-nowrap">
                           {isDefault ? <Check className="w-4 h-4 text-emerald-600" /> : <span className="text-sm text-gray-300">—</span>}
                         </td>

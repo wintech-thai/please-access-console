@@ -319,6 +319,9 @@ export interface RealmItem {
   orgId?: string | null
   realmName?: string | null
   authType?: string | null // 'Native' | 'Google'
+  description?: string | null
+  googleClientId?: string | null
+  googleClientSecret?: string | null
   portalPageCount?: number | null
   realmUserCount?: number | null
   createdDate?: string | null
@@ -334,10 +337,16 @@ export interface GetRealmsPayload {
 export interface AddRealmPayload {
   RealmName: string
   AuthType: string
+  Description?: string
+  GoogleClientId?: string
+  GoogleClientSecret?: string
 }
 
 export interface UpdateRealmPayload {
   RealmName: string
+  Description?: string
+  GoogleClientId?: string
+  GoogleClientSecret?: string
 }
 
 export interface RealmUserItem {

@@ -147,6 +147,15 @@ body {
 
 [data-sonner-toaster] { font-family: 'Prompt', sans-serif !important; }
 
+/* กัน Chrome autofill เปลี่ยน font/background ของ input ไปเป็นค่า default ของมันเอง */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+  font-family: 'Prompt', sans-serif !important;
+  -webkit-text-fill-color: #111827 !important;
+  transition: background-color 9999s ease-in-out 0s;
+}
+
 .custom-scrollbar::-webkit-scrollbar { width: 5px; height: 5px; }
 .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
 .custom-scrollbar::-webkit-scrollbar-thumb { background: rgb(var(--color-primary-800)); border-radius: 9999px; }

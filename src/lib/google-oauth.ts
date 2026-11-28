@@ -8,5 +8,5 @@ export function getApiDomain(): string {
 }
 
 export function buildGoogleRedirectUri(orgId: string): string {
-  return `https://${getApiDomain()}/api/OAuthCallback/org/${encodeURIComponent(orgId)}/action/GoogleCallback`
+  return `https://${getApiDomain()}/api/OauthCallback/org/${encodeURIComponent(orgId)}/action/GoogleCallback`
 }
